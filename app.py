@@ -47,6 +47,17 @@ st.markdown(
         padding: 10px 14px;
         border-radius: 10px;
         border-left: 5px solid #1f77b4;
+        margin-top: 8px;
+        margin-bottom: 8px;
+    }
+    .dimension-title {
+        background-color: #e8f1ff;
+        color: #1f4e79;
+        font-size: 1.2rem;
+        font-weight: 700;
+        padding: 12px 16px;
+        border-radius: 10px;
+        border-left: 5px solid #1f77b4;
         margin-top: 12px;
         margin-bottom: 8px;
     }
@@ -284,9 +295,6 @@ DIMENSIONS = {
 # ─────────────────────────────────────────────
 
 def normaliser(valeur, vmin, vmax, sens="positif"):
-    """
-    Normalisation min-max sur une échelle de 0 à 1.
-    """
     if vmax == vmin:
         return 0.0
 
@@ -440,7 +448,7 @@ st.markdown(
 # INTRODUCTION MÉTHODOLOGIQUE
 # ─────────────────────────────────────────────
 
-with st.expander("ℹ️ Comprendre la logique de construction de l'indicateur", expanded=True):
+with st.expander("ℹ️ Comprendre la logique de construction de l'indicateur", expanded=False):
     st.write(
         """
         L'indicateur est construit en trois étapes :
@@ -462,32 +470,37 @@ with st.expander("📌 Voir toutes les dimensions et variables disponibles", exp
     st.dataframe(tableau_variables(), use_container_width=True)
 
 # ─────────────────────────────────────────────
-# CHOIX DES DIMENSIONS
+# 1. CHOIX DES DIMENSIONS
 # ─────────────────────────────────────────────
 
-st.header("1. Choisir les dimensions de l'indicateur")
+with st.expander("1. Choisir les dimensions de l'indicateur", expanded=True):
 
-dimensions_disponibles = list(DIMENSIONS.keys())
+    dimensions_disponibles = list(DIMENSIONS.keys())
 
-st.write("Cochez les dimensions que vous souhaitez intégrer dans l'indicateur final :")
+    st.write("Cochez les dimensions que vous souhaitez intégrer dans l'indicateur final :")
 
-dimensions_choisies = []
+    dimensions_choisies = []
 
-for nom_dimension in dimensions_disponibles:
-    dimension_active = st.checkbox(
-        label=nom_dimension,
-        value=True,
-        key=f"choix_dimension_{nom_dimension}"
-    )
+    for nom_dimension in dimensions_disponibles:
+        st.markdown(
+            f'<div class="dimension-title">{nom_dimension}</div>',
+            unsafe_allow_html=True
+        )
 
-    if dimension_active:
-        dimensions_choisies.append(nom_dimension)
+        dimension_active = st.checkbox(
+            label="Inclure cette dimension",
+            value=True,
+            key=f"choix_dimension_{nom_dimension}"
+        )
 
-if len(dimensions_choisies) == 0:
-    st.warning("Vous devez choisir au moins une dimension pour calculer l'indicateur.")
-    st.stop()
+        if dimension_active:
+            dimensions_choisies.append(nom_dimension)
 
-st.markdown("Dimensions retenues : **" + ", ".join(dimensions_choisies) + "**")
+    if len(dimensions_choisies) == 0:
+        st.warning("Vous devez choisir au moins une dimension pour calculer l'indicateur.")
+        st.stop()
+
+    st.markdown("Dimensions retenues : **" + ", ".join(dimensions_choisies) + "**")
 
 # ─────────────────────────────────────────────
 # PONDÉRATION DES DIMENSIONS
@@ -517,86 +530,91 @@ with st.sidebar:
     st.write("**Taux de pauvreté** : 5 % → 44 %")
 
 # ─────────────────────────────────────────────
-# CHOIX DES VARIABLES ET VALEURS
+# 2. CHOIX DES VARIABLES ET VALEURS
 # ─────────────────────────────────────────────
 
-st.header("2. Choisir les variables dans chaque dimension")
+with st.expander("2. Choisir les variables dans chaque dimension", expanded=True):
 
-st.write(
-    """
-    Pour chaque dimension retenue, choisissez les variables qui doivent entrer dans le calcul.
-    Une variable cochée est intégrée à l'indicateur. Une variable décochée est ignorée.
-    """
-)
+    st.write(
+        """
+        Pour chaque dimension retenue, choisissez les variables qui doivent entrer dans le calcul.
+        Une variable cochée est intégrée à l'indicateur. Une variable décochée est ignorée.
+        """
+    )
 
-variables_choisies = {}
-valeurs = {}
-poids_variables = {}
+    variables_choisies = {}
+    valeurs = {}
+    poids_variables = {}
 
-tabs = st.tabs(dimensions_choisies)
+    tabs = st.tabs(dimensions_choisies)
 
-for tab, nom_dimension in zip(tabs, dimensions_choisies):
-    with tab:
-        contenu_dimension = DIMENSIONS[nom_dimension]
+    for tab, nom_dimension in zip(tabs, dimensions_choisies):
+        with tab:
+            contenu_dimension = DIMENSIONS[nom_dimension]
 
-        st.subheader(f"Dimension : {nom_dimension}")
-        st.write(contenu_dimension["description"])
+            st.subheader(f"Dimension : {nom_dimension}")
+            st.write(contenu_dimension["description"])
 
-        st.markdown("### Variables disponibles dans cette dimension")
+            st.markdown("### Variables disponibles dans cette dimension")
 
-        variables_choisies[nom_dimension] = []
+            variables_choisies[nom_dimension] = []
 
-        for nom_variable, infos in contenu_dimension["variables"].items():
-            st.markdown("---")
+            for nom_variable, infos in contenu_dimension["variables"].items():
+                st.markdown("---")
 
-            st.markdown(
-                f'<div class="variable-title">{nom_variable}</div>',
-                unsafe_allow_html=True
-            )
+                col_check, col_variable = st.columns([0.08, 0.92])
 
-            actif = st.checkbox(
-                label="Inclure dans le calcul",
-                value=True,
-                key=f"actif_{nom_dimension}_{nom_variable}"
-            )
-
-            st.caption(
-                f"Borne min : {infos['min']} {infos.get('unite', '')} | "
-                f"Borne max : {infos['max']} {infos.get('unite', '')}"
-            )
-
-            if actif:
-                variables_choisies[nom_dimension].append(nom_variable)
-
-                col1, col2 = st.columns([2, 1])
-
-                with col1:
-                    step = 0.1 if isinstance(infos["min"], float) or isinstance(infos["max"], float) else 1.0
-                    format_affichage = "%.1f" if step == 0.1 else "%.0f"
-                    unite_label = f"({infos.get('unite')})" if infos.get("unite") else ""
-
-                    valeurs[nom_variable] = st.number_input(
-                        label=f"Valeur observée {unite_label}",
-                        min_value=float(infos["min"]),
-                        max_value=float(infos["max"]),
-                        value=float(infos["valeur"]),
-                        step=float(step),
-                        format=format_affichage,
-                        key=f"valeur_{nom_dimension}_{nom_variable}"
+                with col_check:
+                    actif = st.checkbox(
+                        label="",
+                        value=True,
+                        key=f"actif_{nom_dimension}_{nom_variable}",
+                        label_visibility="collapsed"
                     )
 
-                with col2:
-                    poids_variables[nom_variable] = st.slider(
-                        label="Poids de la variable",
-                        min_value=0.0,
-                        max_value=5.0,
-                        value=1.0,
-                        step=0.5,
-                        key=f"poids_variable_{nom_dimension}_{nom_variable}"
+                with col_variable:
+                    st.markdown(
+                        f'<div class="variable-title">{nom_variable}</div>',
+                        unsafe_allow_html=True
                     )
 
-            else:
-                st.warning("Cette variable ne sera pas intégrée au calcul.")
+                st.caption(
+                    f"Borne min : {infos['min']} {infos.get('unite', '')} | "
+                    f"Borne max : {infos['max']} {infos.get('unite', '')}"
+                )
+
+                if actif:
+                    variables_choisies[nom_dimension].append(nom_variable)
+
+                    col1, col2 = st.columns([2, 1])
+
+                    with col1:
+                        step = 0.1 if isinstance(infos["min"], float) or isinstance(infos["max"], float) else 1.0
+                        format_affichage = "%.1f" if step == 0.1 else "%.0f"
+                        unite_label = f"({infos.get('unite')})" if infos.get("unite") else ""
+
+                        valeurs[nom_variable] = st.number_input(
+                            label=f"Valeur observée {unite_label}",
+                            min_value=float(infos["min"]),
+                            max_value=float(infos["max"]),
+                            value=float(infos["valeur"]),
+                            step=float(step),
+                            format=format_affichage,
+                            key=f"valeur_{nom_dimension}_{nom_variable}"
+                        )
+
+                    with col2:
+                        poids_variables[nom_variable] = st.slider(
+                            label="Poids de la variable",
+                            min_value=0.0,
+                            max_value=5.0,
+                            value=1.0,
+                            step=0.5,
+                            key=f"poids_variable_{nom_dimension}_{nom_variable}"
+                        )
+
+                else:
+                    st.warning("Cette variable ne sera pas intégrée au calcul.")
 
 # ─────────────────────────────────────────────
 # VÉRIFICATION
@@ -623,109 +641,105 @@ resultats_variables, scores_dimensions, indicateur_global = calculer_indicateur(
 df_resultats = pd.DataFrame(resultats_variables)
 
 # ─────────────────────────────────────────────
-# RÉSULTATS
+# 3. RÉSULTATS
 # ─────────────────────────────────────────────
 
-st.header("3. Résultat de l'indicateur synthétique")
+with st.expander("3. Résultat de l'indicateur synthétique", expanded=True):
 
-col_score, col_radar = st.columns([1, 2])
+    col_score, col_radar = st.columns([1, 2])
 
-with col_score:
-    st.markdown('<div class="section-box">', unsafe_allow_html=True)
-    st.metric(
-        label="Score global",
-        value=f"{indicateur_global * 100:.1f} / 100"
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.subheader("Scores par dimension")
-
-    for dim, score in scores_dimensions.items():
-        st.write(f"**{dim}** : {score * 100:.1f} / 100")
-        st.progress(score)
-
-with col_radar:
-    st.subheader("Radar des dimensions")
-    fig_radar = creer_radar(scores_dimensions)
-    st.plotly_chart(fig_radar, use_container_width=True)
-
-# ─────────────────────────────────────────────
-# DÉTAIL DES VARIABLES
-# ─────────────────────────────────────────────
-
-st.header("4. Détail du calcul par variable")
-
-st.write(
-    """
-    Le tableau ci-dessous montre uniquement les variables retenues dans le calcul.
-    Il permet de vérifier les bornes, le poids et le score obtenu.
-    """
-)
-
-st.dataframe(
-    df_resultats[
-        [
-            "Dimension",
-            "Variable",
-            "Valeur",
-            "Unité",
-            "Min",
-            "Max",
-            "Poids variable",
-            "Score normalisé 0-100",
-            "Source"
-        ]
-    ],
-    use_container_width=True
-)
-
-# ─────────────────────────────────────────────
-# ZOOM SUR LA DIMENSION REVENU
-# ─────────────────────────────────────────────
-
-if "Revenu" in scores_dimensions:
-    st.subheader("Zoom sur la dimension Revenu")
-
-    df_revenu = df_resultats[df_resultats["Dimension"] == "Revenu"][
-        [
-            "Variable",
-            "Valeur",
-            "Unité",
-            "Min",
-            "Max",
-            "Score normalisé 0-100",
-            "Source"
-        ]
-    ]
-
-    st.dataframe(df_revenu, use_container_width=True)
-
-    with st.expander("🧠 Pourquoi le rapport D9/D1 réduit-il le score ?", expanded=False):
-        st.write(
-            """
-            Le rapport interdécile D9/D1 mesure l'écart entre les 10 % les plus aisés et les 10 % les plus modestes.
-
-            Un rapport D9/D1 élevé signifie que les écarts de revenus sont importants.
-            Dans un indicateur de santé sociale ou socio-économique, cela correspond à une situation moins favorable.
-
-            C'est pourquoi, dans le calcul, plus le rapport D9/D1 augmente, plus le score de cette variable diminue.
-            """
+    with col_score:
+        st.markdown('<div class="section-box">', unsafe_allow_html=True)
+        st.metric(
+            label="Score global",
+            value=f"{indicateur_global * 100:.1f} / 100"
         )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.subheader("Scores par dimension")
+
+        for dim, score in scores_dimensions.items():
+            st.write(f"**{dim}** : {score * 100:.1f} / 100")
+            st.progress(score)
+
+    with col_radar:
+        st.subheader("Radar des dimensions")
+        fig_radar = creer_radar(scores_dimensions)
+        st.plotly_chart(fig_radar, use_container_width=True)
 
 # ─────────────────────────────────────────────
-# EXPORT
+# 4. DÉTAIL DES VARIABLES
 # ─────────────────────────────────────────────
 
-st.header("5. Export des résultats")
+with st.expander("4. Détail du calcul par variable", expanded=False):
 
-csv_resultats = df_resultats.to_csv(index=False).encode("utf-8-sig")
+    st.write(
+        """
+        Le tableau ci-dessous montre uniquement les variables retenues dans le calcul.
+        Il permet de vérifier les bornes, le poids et le score obtenu.
+        """
+    )
 
-st.download_button(
-    label="📥 Télécharger les résultats en CSV",
-    data=csv_resultats,
-    file_name="resultats_indicateur_socio_economique.csv",
-    mime="text/csv"
-)
+    st.dataframe(
+        df_resultats[
+            [
+                "Dimension",
+                "Variable",
+                "Valeur",
+                "Unité",
+                "Min",
+                "Max",
+                "Poids variable",
+                "Score normalisé 0-100",
+                "Source"
+            ]
+        ],
+        use_container_width=True
+    )
+
+    if "Revenu" in scores_dimensions:
+        st.subheader("Zoom sur la dimension Revenu")
+
+        df_revenu = df_resultats[df_resultats["Dimension"] == "Revenu"][
+            [
+                "Variable",
+                "Valeur",
+                "Unité",
+                "Min",
+                "Max",
+                "Score normalisé 0-100",
+                "Source"
+            ]
+        ]
+
+        st.dataframe(df_revenu, use_container_width=True)
+
+        with st.expander("🧠 Pourquoi le rapport D9/D1 réduit-il le score ?", expanded=False):
+            st.write(
+                """
+                Le rapport interdécile D9/D1 mesure l'écart entre les 10 % les plus aisés et les 10 % les plus modestes.
+
+                Un rapport D9/D1 élevé signifie que les écarts de revenus sont importants.
+                Dans un indicateur de santé sociale ou socio-économique, cela correspond à une situation moins favorable.
+
+                C'est pourquoi, dans le calcul, plus le rapport D9/D1 augmente, plus le score de cette variable diminue.
+                """
+            )
+
+# ─────────────────────────────────────────────
+# 5. EXPORT
+# ─────────────────────────────────────────────
+
+with st.expander("5. Export des résultats", expanded=False):
+
+    csv_resultats = df_resultats.to_csv(index=False).encode("utf-8-sig")
+
+    st.download_button(
+        label="📥 Télécharger les résultats en CSV",
+        data=csv_resultats,
+        file_name="resultats_indicateur_socio_economique.csv",
+        mime="text/csv"
+    )
 
 # ─────────────────────────────────────────────
 # NOTE FINALE
