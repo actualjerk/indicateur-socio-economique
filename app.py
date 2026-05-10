@@ -13,441 +13,614 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────
-# DONNÉES : DIMENSIONS ET VARIABLES (LISS)
+# STYLE
 # ─────────────────────────────────────────────
+st.markdown(
+    """
+    <style>
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 0.2rem;
+    }
+    .subtitle {
+        font-size: 1.05rem;
+        color: #555;
+        margin-bottom: 1.4rem;
+    }
+    .metric-card {
+        background-color: #f7f7f9;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid #e6e6eb;
+        margin-bottom: 10px;
+    }
+    .small-note {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ─────────────────────────────────────────────
+# DONNÉES : DIMENSIONS, VARIABLES ET BORNES
+# ─────────────────────────────────────────────
+# sens = "positif" : plus la valeur est élevée, meilleur est le score.
+# sens = "negatif" : plus la valeur est élevée, plus le score est dégradé.
+#
+# Modifications intégrées :
+# - Revenu médian : bornes Île-de-France calculées dans le fichier Filosofi 2021
+#   min = 14 790 € ; max = 48 010 €
+# - Rapport interdécile D9/D1 : nouvelle variable de la dimension Revenu
+#   min = 2,2 ; max = 8,1
+#   sens négatif car un D9/D1 élevé traduit davantage d'inégalités de revenus.
+
 DIMENSIONS = {
     "Revenu": {
-        "Revenu médian": {"min": 8000, "max": 35000, "valeur": 20000},
-        "Taux de pauvreté (%)": {"min": 5, "max": 44, "valeur": 18},
-        "Part bas revenus (%)": {"min": 5, "max": 40, "valeur": 20},
+        "description": "Niveau de vie, pauvreté et inégalités monétaires.",
+        "variables": {
+            "Revenu médian": {
+                "min": 14790,
+                "max": 48010,
+                "valeur": 25210,
+                "unite": "€",
+                "sens": "positif",
+                "source": "Filosofi 2021, communes d'Île-de-France"
+            },
+            "Taux de pauvreté (%)": {
+                "min": 5,
+                "max": 44,
+                "valeur": 18,
+                "unite": "%",
+                "sens": "negatif",
+                "source": "Filosofi, communes d'Île-de-France"
+            },
+            "Rapport interdécile du revenu disponible par unité de consommation (D9/D1)": {
+                "min": 2.2,
+                "max": 8.1,
+                "valeur": 4.4,
+                "unite": "",
+                "sens": "negatif",
+                "source": "Filosofi 2021, communes d'Île-de-France"
+            },
+            "Part bas revenus (%)": {
+                "min": 5,
+                "max": 40,
+                "valeur": 20,
+                "unite": "%",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+        },
     },
     "Éducation": {
-        "Diplômés du supérieur (%)": {"min": 5, "max": 60, "valeur": 25},
-        "Sans diplôme (%)": {"min": 5, "max": 50, "valeur": 30},
-        "Taux de scolarisation (%)": {"min": 50, "max": 99, "valeur": 80},
+        "description": "Accès aux diplômes, niveau de formation et scolarisation.",
+        "variables": {
+            "Diplômés du supérieur (%)": {
+                "min": 5,
+                "max": 60,
+                "valeur": 25,
+                "unite": "%",
+                "sens": "positif",
+                "source": "Borne indicative à discuter"
+            },
+            "Sans diplôme (%)": {
+                "min": 5,
+                "max": 50,
+                "valeur": 30,
+                "unite": "%",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+            "Taux de scolarisation (%)": {
+                "min": 50,
+                "max": 99,
+                "valeur": 80,
+                "unite": "%",
+                "sens": "positif",
+                "source": "Borne indicative à discuter"
+            },
+        },
     },
     "Emploi": {
-        "Taux de chômage (%)": {"min": 2, "max": 30, "valeur": 12},
-        "Part contrats précaires (%)": {"min": 5, "max": 40, "valeur": 20},
-        "Taux d'activité (%)": {"min": 40, "max": 80, "valeur": 60},
-    },
-    "Logement": {
-        "Suroccupation (%)": {"min": 1, "max": 25, "valeur": 10},
-        "Part logements sociaux (%)": {"min": 0, "max": 60, "valeur": 20},
-        "Résidences sans confort (%)": {"min": 0, "max": 20, "valeur": 5},
+        "description": "Accès à l'emploi, chômage et stabilité des situations professionnelles.",
+        "variables": {
+            "Taux de chômage (%)": {
+                "min": 2,
+                "max": 30,
+                "valeur": 12,
+                "unite": "%",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+            "Part contrats précaires (%)": {
+                "min": 5,
+                "max": 40,
+                "valeur": 20,
+                "unite": "%",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+            "Taux d'activité (%)": {
+                "min": 45,
+                "max": 85,
+                "valeur": 70,
+                "unite": "%",
+                "sens": "positif",
+                "source": "Borne indicative à discuter"
+            },
+        },
     },
     "Santé": {
-        "Densité médecins (pour 10k hab)": {"min": 1, "max": 30, "valeur": 10},
-        "Espérance de vie (ans)": {"min": 70, "max": 86, "valeur": 79},
+        "description": "État de santé et accès potentiel aux soins.",
+        "variables": {
+            "Espérance de vie": {
+                "min": 70,
+                "max": 90,
+                "valeur": 82,
+                "unite": "ans",
+                "sens": "positif",
+                "source": "Borne indicative à discuter"
+            },
+            "Médecins pour 1000 habitants": {
+                "min": 0,
+                "max": 10,
+                "valeur": 3,
+                "unite": "",
+                "sens": "positif",
+                "source": "Borne indicative à discuter"
+            },
+            "Mortalité prématurée": {
+                "min": 100,
+                "max": 500,
+                "valeur": 250,
+                "unite": "pour 100 000",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+        },
     },
-    "Services": {
-        "Accès commerces (min)": {"min": 1, "max": 30, "valeur": 10},
-        "Accès école (min)": {"min": 1, "max": 25, "valeur": 8},
-        "Accès transports (min)": {"min": 1, "max": 40, "valeur": 15},
+    "Logement": {
+        "description": "Conditions de logement et accès au logement social.",
+        "variables": {
+            "Part logements sociaux (%)": {
+                "min": 0,
+                "max": 60,
+                "valeur": 20,
+                "unite": "%",
+                "sens": "positif",
+                "source": "Borne indicative à discuter"
+            },
+            "Mal-logement (%)": {
+                "min": 0,
+                "max": 30,
+                "valeur": 10,
+                "unite": "%",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+            "Surpopulation des logements (%)": {
+                "min": 0,
+                "max": 25,
+                "valeur": 8,
+                "unite": "%",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+        },
     },
-    "Participation": {
-        "Taux inscription électorale (%)": {"min": 50, "max": 99, "valeur": 75},
-        "Taux de participation (%)": {"min": 20, "max": 85, "valeur": 55},
+    "Cohésion sociale": {
+        "description": "Participation, liens sociaux et fragilités sociales.",
+        "variables": {
+            "Participation électorale (%)": {
+                "min": 30,
+                "max": 90,
+                "valeur": 60,
+                "unite": "%",
+                "sens": "positif",
+                "source": "Borne indicative à discuter"
+            },
+            "Familles monoparentales (%)": {
+                "min": 5,
+                "max": 40,
+                "valeur": 18,
+                "unite": "%",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+            "Criminalité pour 1000 habitants": {
+                "min": 0,
+                "max": 100,
+                "valeur": 35,
+                "unite": "",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+        },
+    },
+    "Environnement": {
+        "description": "Cadre de vie environnemental et exposition aux nuisances.",
+        "variables": {
+            "Espaces verts (%)": {
+                "min": 0,
+                "max": 80,
+                "valeur": 25,
+                "unite": "%",
+                "sens": "positif",
+                "source": "Borne indicative à discuter"
+            },
+            "Pollution de l'air (µg/m³)": {
+                "min": 5,
+                "max": 40,
+                "valeur": 20,
+                "unite": "",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+            "Densité de population (hab/km²)": {
+                "min": 50,
+                "max": 25000,
+                "valeur": 5000,
+                "unite": "",
+                "sens": "negatif",
+                "source": "Borne indicative à discuter"
+            },
+        },
     },
 }
 
+VARIABLES_INVERSES = [
+    nom_variable
+    for dimension in DIMENSIONS.values()
+    for nom_variable, infos in dimension["variables"].items()
+    if infos.get("sens") == "negatif"
+]
+
 # ─────────────────────────────────────────────
-# NORMALISATION MIN-MAX
+# FONCTIONS DE CALCUL
 # ─────────────────────────────────────────────
-# Les variables ci-dessous sont défavorables :
-# plus leur valeur est élevée, plus le score doit être faible.
-
-VARIABLES_INVERSES = {
-    "Taux de pauvreté (%)",
-    "Part bas revenus (%)",
-    "Sans diplôme (%)",
-    "Taux de chômage (%)",
-    "Part contrats précaires (%)",
-    "Suroccupation (%)",
-    "Résidences sans confort (%)",
-    "Accès commerces (min)",
-    "Accès école (min)",
-    "Accès transports (min)",
-}
-
-
-def normaliser(label, valeur, vmin, vmax):
+def normaliser(valeur, vmin, vmax, sens="positif"):
     """
-    Normalise une variable entre 0 et 1.
+    Normalisation linéaire min-max sur une échelle 0-1.
 
-    Pour une variable positive :
-    score = (valeur - min) / (max - min)
+    Variable positive :
+        score = (valeur - min) / (max - min)
 
-    Pour une variable inversée :
-    score = 1 - ((valeur - min) / (max - min))
+    Variable négative :
+        score = 1 - (valeur - min) / (max - min)
 
-    Exemple :
-    - Revenu médian : plus il est élevé, meilleur est le score.
-    - Taux de pauvreté : plus il est élevé, plus le score est faible.
+    Le score est borné entre 0 et 1 pour éviter les valeurs aberrantes.
     """
-
     if vmax == vmin:
-        return 0.5
+        return 0.0
 
-    n = (valeur - vmin) / (vmax - vmin)
+    score = (valeur - vmin) / (vmax - vmin)
 
-    if label in VARIABLES_INVERSES:
-        n = 1 - n
+    if sens == "negatif":
+        score = 1 - score
 
-    return round(np.clip(n, 0, 1), 3)
+    return float(np.clip(score, 0, 1))
+
+
+def moyenne_ponderee(scores, poids):
+    """Calcule une moyenne pondérée en ignorant les poids nuls."""
+    scores = np.array(scores, dtype=float)
+    poids = np.array(poids, dtype=float)
+
+    if len(scores) == 0 or poids.sum() == 0:
+        return 0.0
+
+    return float(np.average(scores, weights=poids))
+
+
+def calculer_indicateur(valeurs, poids_variables, poids_dimensions):
+    """
+    Calcule :
+    - les scores normalisés de chaque variable ;
+    - les scores de chaque dimension ;
+    - l'indicateur synthétique global.
+    """
+    resultats_variables = []
+    scores_dimensions = {}
+
+    for nom_dimension, contenu_dimension in DIMENSIONS.items():
+        scores_var_dim = []
+        poids_var_dim = []
+
+        for nom_variable, infos in contenu_dimension["variables"].items():
+            valeur = valeurs[nom_variable]
+            poids = poids_variables[nom_variable]
+
+            score = normaliser(
+                valeur=valeur,
+                vmin=infos["min"],
+                vmax=infos["max"],
+                sens=infos.get("sens", "positif")
+            )
+
+            scores_var_dim.append(score)
+            poids_var_dim.append(poids)
+
+            resultats_variables.append({
+                "Dimension": nom_dimension,
+                "Variable": nom_variable,
+                "Valeur": valeur,
+                "Unité": infos.get("unite", ""),
+                "Min": infos["min"],
+                "Max": infos["max"],
+                "Sens": infos.get("sens", "positif"),
+                "Poids variable": poids,
+                "Score normalisé 0-1": round(score, 4),
+                "Score normalisé 0-100": round(score * 100, 2),
+                "Source / remarque": infos.get("source", "")
+            })
+
+        score_dimension = moyenne_ponderee(scores_var_dim, poids_var_dim)
+        scores_dimensions[nom_dimension] = score_dimension
+
+    indicateur_global = moyenne_ponderee(
+        list(scores_dimensions.values()),
+        [poids_dimensions[dim] for dim in scores_dimensions.keys()]
+    )
+
+    return resultats_variables, scores_dimensions, indicateur_global
+
+
+def creer_radar(scores_dimensions):
+    """Crée un graphique radar agrandi pour visualiser les scores des dimensions."""
+    dimensions = list(scores_dimensions.keys())
+    scores = [scores_dimensions[dim] * 100 for dim in dimensions]
+
+    # Fermer le radar
+    dimensions_fermees = dimensions + [dimensions[0]]
+    scores_fermes = scores + [scores[0]]
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatterpolar(
+            r=scores_fermes,
+            theta=dimensions_fermees,
+            fill="toself",
+            name="Score des dimensions",
+            line=dict(width=3)
+        )
+    )
+
+    fig.update_layout(
+        height=700,  # Radar agrandi
+        margin=dict(l=90, r=90, t=80, b=80),
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 100],
+                tickfont=dict(size=12)
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=14)
+            )
+        ),
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.08,
+            xanchor="center",
+            x=0.5
+        )
+    )
+
+    return fig
 
 
 # ─────────────────────────────────────────────
 # INTERFACE
 # ─────────────────────────────────────────────
-st.title("📊 Constructeur d'indicateur socio-économique")
-st.caption("Inspiré des travaux de Jean Gadrey & Florence Jany-Catrice · Données INSEE")
-
-st.info(
-    """
-    **Variable actualisée : taux de pauvreté communal.**
-
-    La variable **Taux de pauvreté (%)** est intégrée dans la dimension **Revenu**.
-
-    Elle est normalisée avec des bornes observées pour les communes d'Île-de-France :
-
-    - **minimum = 5 %**
-    - **maximum = 44 %**
-
-    Comme il s'agit d'une variable défavorable, son score est inversé :
-    plus le taux de pauvreté est élevé, plus le score normalisé est faible.
-
-    Source : Insee-DGFiP-Cnaf-Cnav-CCMSA, Filosofi 2021,
-    via l'Observatoire des territoires.
-    """
+st.markdown('<div class="main-title">📊 Indicateur Socio-Économique communal</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="subtitle">Prototype pédagogique participatif inspiré des indicateurs alternatifs de richesse et de santé sociale.</div>',
+    unsafe_allow_html=True
 )
 
-st.markdown("---")
+with st.expander("ℹ️ Méthode de normalisation utilisée", expanded=False):
+    st.write(
+        """
+        Chaque variable est normalisée entre 0 et 1 avec une méthode min-max.
+
+        - Pour une variable positive, un niveau élevé améliore le score.
+        - Pour une variable négative, un niveau élevé dégrade le score.
+
+        Formule pour une variable positive :
+
+        `score = (valeur - min) / (max - min)`
+
+        Formule pour une variable négative :
+
+        `score = 1 - ((valeur - min) / (max - min))`
+
+        Les scores sont ensuite bornés entre 0 et 1, puis exprimés sur 100 pour l'affichage.
+        """
+    )
+
+with st.sidebar:
+    st.header("⚙️ Pondération des dimensions")
+    st.caption("Poids de chaque dimension dans l'indicateur final.")
+
+    poids_dimensions = {}
+    for nom_dimension in DIMENSIONS.keys():
+        poids_dimensions[nom_dimension] = st.slider(
+            label=f"Poids — {nom_dimension}",
+            min_value=0.0,
+            max_value=5.0,
+            value=1.0,
+            step=0.5,
+            key=f"poids_dimension_{nom_dimension}"
+        )
+
+    st.divider()
+    st.header("📌 Bornes intégrées")
+    st.write("**Revenu médian** : 14 790 € → 48 010 €")
+    st.write("**D9/D1** : 2,2 → 8,1")
+    st.write("**Taux de pauvreté** : 5 % → 44 %")
 
 # ─────────────────────────────────────────────
-# ÉTAPE 1 : CHOIX DES DIMENSIONS
+# SAISIE DES VALEURS
 # ─────────────────────────────────────────────
-st.header("① Choisir les dimensions")
+st.header("1. Choix des valeurs et des poids des variables")
 
-cols = st.columns(4)
-dims_choisies = []
+valeurs = {}
+poids_variables = {}
 
-for i, dim in enumerate(DIMENSIONS.keys()):
-    with cols[i % 4]:
-        if st.checkbox(dim, value=True):
-            dims_choisies.append(dim)
+tabs = st.tabs(list(DIMENSIONS.keys()))
 
-if not dims_choisies:
-    st.warning("Sélectionne au moins une dimension.")
-    st.stop()
+for tab, (nom_dimension, contenu_dimension) in zip(tabs, DIMENSIONS.items()):
+    with tab:
+        st.subheader(nom_dimension)
+        st.write(contenu_dimension["description"])
 
-st.markdown("---")
+        for nom_variable, infos in contenu_dimension["variables"].items():
+            st.markdown(f"#### {nom_variable}")
 
-# ─────────────────────────────────────────────
-# ÉTAPE 2 : CHOIX DES VARIABLES ET VALEURS
-# ─────────────────────────────────────────────
-st.header("② Ajuster les valeurs des variables")
+            col1, col2, col3 = st.columns([2, 1, 1])
 
-variables_actives = {}
+            with col1:
+                step = 0.1 if isinstance(infos["min"], float) or isinstance(infos["max"], float) else 1.0
+                format_affichage = "%.1f" if step == 0.1 else "%.0f"
+                unite_label = f"({infos.get('unite')})" if infos.get("unite") else ""
 
-for dim in dims_choisies:
-    with st.expander(f"📂 {dim}", expanded=True):
-        cols2 = st.columns(2)
-
-        for j, (var, meta) in enumerate(DIMENSIONS[dim].items()):
-            with cols2[j % 2]:
-                val = st.slider(
-                    label=var,
-                    min_value=float(meta["min"]),
-                    max_value=float(meta["max"]),
-                    value=float(meta["valeur"]),
-                    step=0.1,
-                    key=f"{dim}_{var}"
+                valeurs[nom_variable] = st.number_input(
+                    label=f"Valeur observée {unite_label}",
+                    min_value=float(infos["min"]),
+                    max_value=float(infos["max"]),
+                    value=float(infos["valeur"]),
+                    step=float(step),
+                    format=format_affichage,
+                    key=f"valeur_{nom_dimension}_{nom_variable}"
                 )
 
-                variables_actives[var] = {
-                    "dimension": dim,
-                    "valeur": val,
-                    "min": meta["min"],
-                    "max": meta["max"],
-                }
+            with col2:
+                poids_variables[nom_variable] = st.slider(
+                    label="Poids",
+                    min_value=0.0,
+                    max_value=5.0,
+                    value=1.0,
+                    step=0.5,
+                    key=f"poids_variable_{nom_dimension}_{nom_variable}"
+                )
 
-st.markdown("---")
+            with col3:
+                sens = infos.get("sens", "positif")
+                sens_affiche = "positif" if sens == "positif" else "négatif / inversé"
+                st.metric("Sens", sens_affiche)
+                st.caption(f"Bornes : {infos['min']} → {infos['max']} {infos.get('unite', '')}")
 
-# ─────────────────────────────────────────────
-# ÉTAPE 3 : PONDÉRATION DES DIMENSIONS
-# ─────────────────────────────────────────────
-st.header("③ Pondérer les dimensions")
-
-poids_dims = {}
-
-cols3 = st.columns(len(dims_choisies))
-
-for i, dim in enumerate(dims_choisies):
-    with cols3[i]:
-        poids_dims[dim] = st.slider(
-            f"{dim}",
-            min_value=0,
-            max_value=5,
-            value=3,
-            key=f"poids_{dim}"
-        )
-
-st.markdown("---")
+            st.markdown("---")
 
 # ─────────────────────────────────────────────
-# ÉTAPE 4 : CALCUL DES RÉSULTATS
+# CALCUL
 # ─────────────────────────────────────────────
-st.header("④ Résultats")
-
-# Normalisation des variables
-rows = []
-
-for var, meta in variables_actives.items():
-    norm = normaliser(
-        var,
-        meta["valeur"],
-        meta["min"],
-        meta["max"]
-    )
-
-    rows.append({
-        "Dimension": meta["dimension"],
-        "Variable": var,
-        "Valeur": meta["valeur"],
-        "Score normalisé": norm,
-        "Poids dimension": poids_dims[meta["dimension"]]
-    })
-
-df = pd.DataFrame(rows)
-
-# Score par dimension
-scores_dims = {}
-
-for dim in dims_choisies:
-    subset = df[df["Dimension"] == dim]
-
-    if not subset.empty:
-        scores_dims[dim] = round(subset["Score normalisé"].mean(), 3)
-
-# Score global pondéré
-total_poids = sum(
-    poids_dims[d]
-    for d in dims_choisies
-    if poids_dims[d] > 0
+resultats_variables, scores_dimensions, indicateur_global = calculer_indicateur(
+    valeurs=valeurs,
+    poids_variables=poids_variables,
+    poids_dimensions=poids_dimensions
 )
 
-if total_poids == 0:
-    st.warning("Augmente les pondérations pour calculer un score.")
-    st.stop()
-
-score_global = sum(
-    scores_dims[d] * poids_dims[d]
-    for d in dims_choisies
-    if poids_dims[d] > 0
-) / total_poids
+df_resultats = pd.DataFrame(resultats_variables)
 
 # ─────────────────────────────────────────────
-# AFFICHAGE DU SCORE GLOBAL
+# AFFICHAGE DES RÉSULTATS
 # ─────────────────────────────────────────────
-col_score, col_jauge = st.columns([1, 2])
+st.header("2. Résultat de l'indicateur synthétique")
+
+col_score, col_radar = st.columns([1, 2])
 
 with col_score:
-    couleur = (
-        "#2ecc71" if score_global >= 0.66
-        else "#e67e22" if score_global >= 0.33
-        else "#e74c3c"
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+    st.metric(
+        label="Score global",
+        value=f"{indicateur_global * 100:.1f} / 100"
     )
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown(
-        f"""
-        <div style="
-            background:{couleur};
-            border-radius:16px;
-            padding:30px;
-            text-align:center;
-            color:white;
-        ">
-            <div style="font-size:18px;">Score global</div>
-            <div style="font-size:64px;font-weight:bold;">
-                {round(score_global * 100, 1)}
-            </div>
-            <div style="font-size:16px;">/ 100</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-with col_jauge:
-    fig_jauge = go.Figure(
-        go.Indicator(
-            mode="gauge+number",
-            value=round(score_global * 100, 1),
-            gauge={
-                "axis": {"range": [0, 100]},
-                "bar": {"color": couleur},
-                "steps": [
-                    {"range": [0, 33], "color": "#fadbd8"},
-                    {"range": [33, 66], "color": "#fdebd0"},
-                    {"range": [66, 100], "color": "#d5f5e3"},
-                ]
-            },
-            title={"text": "Indice synthétique"}
-        )
-    )
-
-    fig_jauge.update_layout(
-        height=280,
-        margin=dict(t=40, b=0)
-    )
-
-    st.plotly_chart(fig_jauge, use_container_width=True)
-
-st.markdown("---")
-
-# ─────────────────────────────────────────────
-# GRAPHIQUES : RADAR ET BARRES
-# ─────────────────────────────────────────────
-col_radar, col_bar = st.columns(2)
+    st.subheader("Scores par dimension")
+    for dim, score in scores_dimensions.items():
+        st.write(f"**{dim}** : {score * 100:.1f} / 100")
+        st.progress(score)
 
 with col_radar:
     st.subheader("Radar des dimensions")
-
-    labels = list(scores_dims.keys())
-    values = list(scores_dims.values())
-
-    values_closed = values + [values[0]]
-    labels_closed = labels + [labels[0]]
-
-    fig_radar = go.Figure(
-        go.Scatterpolar(
-            r=values_closed,
-            theta=labels_closed,
-            fill="toself",
-            fillcolor="rgba(53,162,235,0.3)",
-            line=dict(color="rgba(53,162,235,0.9)")
-        )
-    )
-
-    fig_radar.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 1]
-            )
-        ),
-        showlegend=False,
-        height=400
-    )
-
+    fig_radar = creer_radar(scores_dimensions)
     st.plotly_chart(fig_radar, use_container_width=True)
 
-with col_bar:
-    st.subheader("Score par dimension")
-
-    df_dims = pd.DataFrame({
-        "Dimension": list(scores_dims.keys()),
-        "Score": [v * 100 for v in scores_dims.values()]
-    }).sort_values("Score", ascending=True)
-
-    fig_bar = go.Figure(
-        go.Bar(
-            x=df_dims["Score"],
-            y=df_dims["Dimension"],
-            orientation="h",
-            marker_color="rgba(53,162,235,0.7)"
-        )
-    )
-
-    fig_bar.update_layout(
-        xaxis=dict(range=[0, 100]),
-        height=400,
-        margin=dict(l=10, r=10)
-    )
-
-    st.plotly_chart(fig_bar, use_container_width=True)
-
-st.markdown("---")
-
 # ─────────────────────────────────────────────
-# TABLEAU DÉTAILLÉ DES VARIABLES
+# TABLEAUX
 # ─────────────────────────────────────────────
-st.subheader("Détail des variables")
+st.header("3. Détail des variables normalisées")
 
-df_display = df[[
-    "Dimension",
-    "Variable",
-    "Valeur",
-    "Score normalisé"
-]].copy()
+st.dataframe(
+    df_resultats[
+        [
+            "Dimension",
+            "Variable",
+            "Valeur",
+            "Unité",
+            "Min",
+            "Max",
+            "Sens",
+            "Poids variable",
+            "Score normalisé 0-100",
+            "Source / remarque"
+        ]
+    ],
+    use_container_width=True
+)
 
-df_display["Score normalisé"] = (
-    df_display["Score normalisé"] * 100
-).round(1)
+st.subheader("Lecture rapide des nouvelles bornes de la dimension Revenu")
 
-df_display.columns = [
-    "Dimension",
-    "Variable",
-    "Valeur saisie",
-    "Score (0-100)"
+df_revenu = df_resultats[df_resultats["Dimension"] == "Revenu"][
+    [
+        "Variable",
+        "Valeur",
+        "Min",
+        "Max",
+        "Sens",
+        "Score normalisé 0-100",
+        "Source / remarque"
+    ]
 ]
 
-st.dataframe(
-    df_display,
-    use_container_width=True,
-    hide_index=True
-)
-
-st.markdown("---")
+st.dataframe(df_revenu, use_container_width=True)
 
 # ─────────────────────────────────────────────
-# TABLEAU DES BORNES DE NORMALISATION
+# EXPORT
 # ─────────────────────────────────────────────
-st.subheader("Bornes de normalisation utilisées")
+st.header("4. Export des résultats")
 
-bornes_rows = []
-
-for dimension, variables in DIMENSIONS.items():
-    for variable, meta in variables.items():
-        bornes_rows.append({
-            "Dimension": dimension,
-            "Variable": variable,
-            "Minimum": meta["min"],
-            "Maximum": meta["max"],
-            "Sens": "inversé" if variable in VARIABLES_INVERSES else "positif"
-        })
-
-df_bornes = pd.DataFrame(bornes_rows)
-
-st.dataframe(
-    df_bornes,
-    use_container_width=True,
-    hide_index=True
-)
-
-st.caption(
-    "Pour le taux de pauvreté : bornes observées en Île-de-France "
-    "dans le fichier Filosofi 2021 de l'Observatoire des territoires : "
-    "minimum 5 %, maximum 44 %."
-)
-
-st.markdown("---")
-
-# ─────────────────────────────────────────────
-# EXPORT CSV
-# ─────────────────────────────────────────────
-st.subheader("Exporter les résultats")
-
-csv = df_display.to_csv(index=False).encode("utf-8")
+csv_resultats = df_resultats.to_csv(index=False).encode("utf-8-sig")
 
 st.download_button(
-    label="📥 Télécharger les résultats (CSV)",
-    data=csv,
-    file_name="indicateur_socioeconomique.csv",
+    label="📥 Télécharger les résultats en CSV",
+    data=csv_resultats,
+    file_name="resultats_indicateur_socio_economique.csv",
     mime="text/csv"
 )
 
-st.caption(
-    "Source : données INSEE / Filosofi 2021 via Observatoire des territoires "
-    "pour le taux de pauvreté · Gadrey & Jany-Catrice · LISS"
-)
+# ─────────────────────────────────────────────
+# NOTE PÉDAGOGIQUE
+# ─────────────────────────────────────────────
+with st.expander("🧠 Note pédagogique : pourquoi D9/D1 est inversé ?", expanded=False):
+    st.write(
+        """
+        Le rapport interdécile D9/D1 compare le niveau de vie au-dessus duquel se situent les 10 % les plus aisés
+        au niveau de vie au-dessous duquel se situent les 10 % les plus modestes.
+
+        Exemple : un D9/D1 égal à 4 signifie que le seuil des 10 % les plus aisés est environ quatre fois plus élevé
+        que le seuil des 10 % les plus modestes.
+
+        Dans un indicateur de santé sociale ou socio-économique, une valeur élevée du D9/D1 traduit donc une plus forte
+        inégalité de revenus. C'est pourquoi la normalisation est inversée :
+        plus le D9/D1 augmente, plus le score diminue.
+        """
+    )
