@@ -17,44 +17,44 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 DIMENSIONS = {
     "Revenu": {
-        "Revenu médian":         {"min": 8000,  "max": 35000, "valeur": 20000},
-        "Taux de pauvreté (%)":  {"min": 5,     "max": 44,    "valeur": 18},
-        "Part bas revenus (%)":  {"min": 5,     "max": 40,    "valeur": 20},
+        "Revenu médian": {"min": 8000, "max": 35000, "valeur": 20000},
+        "Taux de pauvreté (%)": {"min": 5, "max": 44, "valeur": 18},
+        "Part bas revenus (%)": {"min": 5, "max": 40, "valeur": 20},
     },
     "Éducation": {
-        "Diplômés du supérieur (%)": {"min": 5,  "max": 60, "valeur": 25},
-        "Sans diplôme (%)":          {"min": 5,  "max": 50, "valeur": 30},
+        "Diplômés du supérieur (%)": {"min": 5, "max": 60, "valeur": 25},
+        "Sans diplôme (%)": {"min": 5, "max": 50, "valeur": 30},
         "Taux de scolarisation (%)": {"min": 50, "max": 99, "valeur": 80},
     },
     "Emploi": {
-        "Taux de chômage (%)":          {"min": 2,  "max": 30, "valeur": 12},
-        "Part contrats précaires (%)": {"min": 5,  "max": 40, "valeur": 20},
-        "Taux d'activité (%)":         {"min": 40, "max": 80, "valeur": 60},
+        "Taux de chômage (%)": {"min": 2, "max": 30, "valeur": 12},
+        "Part contrats précaires (%)": {"min": 5, "max": 40, "valeur": 20},
+        "Taux d'activité (%)": {"min": 40, "max": 80, "valeur": 60},
     },
     "Logement": {
-        "Suroccupation (%)":             {"min": 1, "max": 25, "valeur": 10},
-        "Part logements sociaux (%)":    {"min": 0, "max": 60, "valeur": 20},
-        "Résidences sans confort (%)":   {"min": 0, "max": 20, "valeur": 5},
+        "Suroccupation (%)": {"min": 1, "max": 25, "valeur": 10},
+        "Part logements sociaux (%)": {"min": 0, "max": 60, "valeur": 20},
+        "Résidences sans confort (%)": {"min": 0, "max": 20, "valeur": 5},
     },
     "Santé": {
-        "Densité médecins (pour 10k hab)": {"min": 1,  "max": 30, "valeur": 10},
-        "Espérance de vie (ans)":          {"min": 70, "max": 86, "valeur": 79},
+        "Densité médecins (pour 10k hab)": {"min": 1, "max": 30, "valeur": 10},
+        "Espérance de vie (ans)": {"min": 70, "max": 86, "valeur": 79},
     },
     "Services": {
-        "Accès commerces (min)":   {"min": 1, "max": 30, "valeur": 10},
-        "Accès école (min)":       {"min": 1, "max": 25, "valeur": 8},
-        "Accès transports (min)":  {"min": 1, "max": 40, "valeur": 15},
+        "Accès commerces (min)": {"min": 1, "max": 30, "valeur": 10},
+        "Accès école (min)": {"min": 1, "max": 25, "valeur": 8},
+        "Accès transports (min)": {"min": 1, "max": 40, "valeur": 15},
     },
     "Participation": {
         "Taux inscription électorale (%)": {"min": 50, "max": 99, "valeur": 75},
-        "Taux de participation (%)":       {"min": 20, "max": 85, "valeur": 55},
+        "Taux de participation (%)": {"min": 20, "max": 85, "valeur": 55},
     },
 }
 
 # ─────────────────────────────────────────────
-# NORMALISATION (min-max, avec sens positif ou inversé)
+# NORMALISATION MIN-MAX
 # ─────────────────────────────────────────────
-# Les variables listées ci-dessous sont considérées comme défavorables :
+# Les variables ci-dessous sont défavorables :
 # plus leur valeur est élevée, plus le score doit être faible.
 
 VARIABLES_INVERSES = {
@@ -69,6 +69,7 @@ VARIABLES_INVERSES = {
     "Accès école (min)",
     "Accès transports (min)",
 }
+
 
 def normaliser(label, valeur, vmin, vmax):
     """
@@ -95,6 +96,7 @@ def normaliser(label, valeur, vmin, vmax):
 
     return round(np.clip(n, 0, 1), 3)
 
+
 # ─────────────────────────────────────────────
 # INTERFACE
 # ─────────────────────────────────────────────
@@ -103,10 +105,14 @@ st.caption("Inspiré des travaux de Jean Gadrey & Florence Jany-Catrice · Donn�
 
 st.info(
     """
-    **Variable actualisée : taux de pauvreté communal.**  
+    **Variable actualisée : taux de pauvreté communal.**
+
     La variable **Taux de pauvreté (%)** est intégrée dans la dimension **Revenu**.
+
     Elle est normalisée avec des bornes observées pour les communes d'Île-de-France :
-    **minimum = 5 %** et **maximum = 44 %**.
+
+    - **minimum = 5 %**
+    - **maximum = 44 %**
 
     Comme il s'agit d'une variable défavorable, son score est inversé :
     plus le taux de pauvreté est élevé, plus le score normalisé est faible.
@@ -118,7 +124,9 @@ st.info(
 
 st.markdown("---")
 
-# ── ÉTAPE 1 : Choix des dimensions
+# ─────────────────────────────────────────────
+# ÉTAPE 1 : CHOIX DES DIMENSIONS
+# ─────────────────────────────────────────────
 st.header("① Choisir les dimensions")
 
 cols = st.columns(4)
@@ -135,7 +143,9 @@ if not dims_choisies:
 
 st.markdown("---")
 
-# ── ÉTAPE 2 : Choix des variables et valeurs
+# ─────────────────────────────────────────────
+# ÉTAPE 2 : CHOIX DES VARIABLES ET VALEURS
+# ─────────────────────────────────────────────
 st.header("② Ajuster les valeurs des variables")
 
 variables_actives = {}
@@ -164,10 +174,13 @@ for dim in dims_choisies:
 
 st.markdown("---")
 
-# ── ÉTAPE 3 : Pondérations
+# ─────────────────────────────────────────────
+# ÉTAPE 3 : PONDÉRATION DES DIMENSIONS
+# ─────────────────────────────────────────────
 st.header("③ Pondérer les dimensions")
 
 poids_dims = {}
+
 cols3 = st.columns(len(dims_choisies))
 
 for i, dim in enumerate(dims_choisies):
@@ -182,14 +195,21 @@ for i, dim in enumerate(dims_choisies):
 
 st.markdown("---")
 
-# ── CALCUL
+# ─────────────────────────────────────────────
+# ÉTAPE 4 : CALCUL DES RÉSULTATS
+# ─────────────────────────────────────────────
 st.header("④ Résultats")
 
 # Normalisation des variables
 rows = []
 
 for var, meta in variables_actives.items():
-    norm = normaliser(var, meta["valeur"], meta["min"], meta["max"])
+    norm = normaliser(
+        var,
+        meta["valeur"],
+        meta["min"],
+        meta["max"]
+    )
 
     rows.append({
         "Dimension": meta["dimension"],
@@ -227,7 +247,9 @@ score_global = sum(
     if poids_dims[d] > 0
 ) / total_poids
 
-# ── AFFICHAGE DU SCORE GLOBAL
+# ─────────────────────────────────────────────
+# AFFICHAGE DU SCORE GLOBAL
+# ─────────────────────────────────────────────
 col_score, col_jauge = st.columns([1, 2])
 
 with col_score:
@@ -257,20 +279,22 @@ with col_score:
     )
 
 with col_jauge:
-    fig_jauge = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=round(score_global * 100, 1),
-        gauge={
-            "axis": {"range": [0, 100]},
-            "bar": {"color": couleur},
-            "steps": [
-                {"range": [0, 33],   "color": "#fadbd8"},
-                {"range": [33, 66],  "color": "#fdebd0"},
-                {"range": [66, 100], "color": "#d5f5e3"},
-            ]
-        },
-        title={"text": "Indice synthétique"}
-    ))
+    fig_jauge = go.Figure(
+        go.Indicator(
+            mode="gauge+number",
+            value=round(score_global * 100, 1),
+            gauge={
+                "axis": {"range": [0, 100]},
+                "bar": {"color": couleur},
+                "steps": [
+                    {"range": [0, 33], "color": "#fadbd8"},
+                    {"range": [33, 66], "color": "#fdebd0"},
+                    {"range": [66, 100], "color": "#d5f5e3"},
+                ]
+            },
+            title={"text": "Indice synthétique"}
+        )
+    )
 
     fig_jauge.update_layout(
         height=280,
@@ -281,7 +305,9 @@ with col_jauge:
 
 st.markdown("---")
 
-# ── RADAR PAR DIMENSION
+# ─────────────────────────────────────────────
+# GRAPHIQUES : RADAR ET BARRES
+# ─────────────────────────────────────────────
 col_radar, col_bar = st.columns(2)
 
 with col_radar:
@@ -293,13 +319,15 @@ with col_radar:
     values_closed = values + [values[0]]
     labels_closed = labels + [labels[0]]
 
-    fig_radar = go.Figure(go.Scatterpolar(
-        r=values_closed,
-        theta=labels_closed,
-        fill="toself",
-        fillcolor="rgba(53,162,235,0.3)",
-        line=dict(color="rgba(53,162,235,0.9)")
-    ))
+    fig_radar = go.Figure(
+        go.Scatterpolar(
+            r=values_closed,
+            theta=labels_closed,
+            fill="toself",
+            fillcolor="rgba(53,162,235,0.3)",
+            line=dict(color="rgba(53,162,235,0.9)")
+        )
+    )
 
     fig_radar.update_layout(
         polar=dict(
@@ -322,12 +350,14 @@ with col_bar:
         "Score": [v * 100 for v in scores_dims.values()]
     }).sort_values("Score", ascending=True)
 
-    fig_bar = go.Figure(go.Bar(
-        x=df_dims["Score"],
-        y=df_dims["Dimension"],
-        orientation="h",
-        marker_color="rgba(53,162,235,0.7)"
-    ))
+    fig_bar = go.Figure(
+        go.Bar(
+            x=df_dims["Score"],
+            y=df_dims["Dimension"],
+            orientation="h",
+            marker_color="rgba(53,162,235,0.7)"
+        )
+    )
 
     fig_bar.update_layout(
         xaxis=dict(range=[0, 100]),
@@ -339,11 +369,21 @@ with col_bar:
 
 st.markdown("---")
 
-# ── TABLEAU DÉTAILLÉ
+# ─────────────────────────────────────────────
+# TABLEAU DÉTAILLÉ DES VARIABLES
+# ─────────────────────────────────────────────
 st.subheader("Détail des variables")
 
-df_display = df[["Dimension", "Variable", "Valeur", "Score normalisé"]].copy()
-df_display["Score normalisé"] = (df_display["Score normalisé"] * 100).round(1)
+df_display = df[[
+    "Dimension",
+    "Variable",
+    "Valeur",
+    "Score normalisé"
+]].copy()
+
+df_display["Score normalisé"] = (
+    df_display["Score normalisé"] * 100
+).round(1)
 
 df_display.columns = [
     "Dimension",
@@ -360,7 +400,9 @@ st.dataframe(
 
 st.markdown("---")
 
-# ── BORNES UTILISÉES
+# ─────────────────────────────────────────────
+# TABLEAU DES BORNES DE NORMALISATION
+# ─────────────────────────────────────────────
 st.subheader("Bornes de normalisation utilisées")
 
 bornes_rows = []
@@ -384,13 +426,16 @@ st.dataframe(
 )
 
 st.caption(
-    "Pour le taux de pauvreté : bornes observées en Île-de-France dans le fichier "
-    "Filosofi 2021 de l'Observatoire des territoires : minimum 5 %, maximum 44 %."
+    "Pour le taux de pauvreté : bornes observées en Île-de-France "
+    "dans le fichier Filosofi 2021 de l'Observatoire des territoires : "
+    "minimum 5 %, maximum 44 %."
 )
 
 st.markdown("---")
 
-# ── EXPORT CSV
+# ─────────────────────────────────────────────
+# EXPORT CSV
+# ─────────────────────────────────────────────
 st.subheader("Exporter les résultats")
 
 csv = df_display.to_csv(index=False).encode("utf-8")
@@ -406,7 +451,3 @@ st.caption(
     "Source : données INSEE / Filosofi 2021 via Observatoire des territoires "
     "pour le taux de pauvreté · Gadrey & Jany-Catrice · LISS"
 )
-    mime="text/csv"
-)
-
-st.caption("Source : données inspirées INSEE · Gadrey & Jany-Catrice · LISS")
