@@ -39,6 +39,17 @@ st.markdown(
         color: #666;
         font-size: 0.9rem;
     }
+    .variable-title {
+        background-color: #e8f1ff;
+        color: #1f4e79;
+        font-size: 1.15rem;
+        font-weight: 700;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border-left: 5px solid #1f77b4;
+        margin-top: 12px;
+        margin-bottom: 8px;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -458,11 +469,19 @@ st.header("1. Choisir les dimensions de l'indicateur")
 
 dimensions_disponibles = list(DIMENSIONS.keys())
 
-dimensions_choisies = st.multiselect(
-    "Sélectionnez les dimensions que vous souhaitez intégrer dans l'indicateur final :",
-    options=dimensions_disponibles,
-    default=dimensions_disponibles,
-)
+st.write("Cochez les dimensions que vous souhaitez intégrer dans l'indicateur final :")
+
+dimensions_choisies = []
+
+for nom_dimension in dimensions_disponibles:
+    dimension_active = st.checkbox(
+        label=nom_dimension,
+        value=True,
+        key=f"choix_dimension_{nom_dimension}"
+    )
+
+    if dimension_active:
+        dimensions_choisies.append(nom_dimension)
 
 if len(dimensions_choisies) == 0:
     st.warning("Vous devez choisir au moins une dimension pour calculer l'indicateur.")
@@ -530,8 +549,13 @@ for tab, nom_dimension in zip(tabs, dimensions_choisies):
         for nom_variable, infos in contenu_dimension["variables"].items():
             st.markdown("---")
 
+            st.markdown(
+                f'<div class="variable-title">{nom_variable}</div>',
+                unsafe_allow_html=True
+            )
+
             actif = st.checkbox(
-                label=f"Intégrer la variable : {nom_variable}",
+                label="Inclure dans le calcul",
                 value=True,
                 key=f"actif_{nom_dimension}_{nom_variable}"
             )
