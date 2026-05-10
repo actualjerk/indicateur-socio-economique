@@ -18,7 +18,7 @@ st.set_page_config(
 DIMENSIONS = {
     "Revenu": {
         "Revenu médian":         {"min": 8000,  "max": 35000, "valeur": 20000},
-        "Taux de pauvreté (%)":  {"min": 5,     "max": 45,    "valeur": 18},
+        "Taux de pauvreté (%)":  {"min": 5,     "max": 44,    "valeur": 18},
         "Part bas revenus (%)":  {"min": 5,     "max": 40,    "valeur": 20},
     },
     "Éducation": {
@@ -27,23 +27,23 @@ DIMENSIONS = {
         "Taux de scolarisation (%)": {"min": 50, "max": 99, "valeur": 80},
     },
     "Emploi": {
-        "Taux de chômage (%)":      {"min": 2,  "max": 30, "valeur": 12},
-        "Part contrats précaires (%)": {"min": 5, "max": 40, "valeur": 20},
-        "Taux d'activité (%)":      {"min": 40, "max": 80, "valeur": 60},
+        "Taux de chômage (%)":          {"min": 2,  "max": 30, "valeur": 12},
+        "Part contrats précaires (%)": {"min": 5,  "max": 40, "valeur": 20},
+        "Taux d'activité (%)":         {"min": 40, "max": 80, "valeur": 60},
     },
     "Logement": {
-        "Suroccupation (%)":          {"min": 1,  "max": 25, "valeur": 10},
-        "Part logements sociaux (%)": {"min": 0,  "max": 60, "valeur": 20},
-        "Résidences sans confort (%)":{"min": 0,  "max": 20, "valeur": 5},
+        "Suroccupation (%)":             {"min": 1, "max": 25, "valeur": 10},
+        "Part logements sociaux (%)":    {"min": 0, "max": 60, "valeur": 20},
+        "Résidences sans confort (%)":   {"min": 0, "max": 20, "valeur": 5},
     },
     "Santé": {
-        "Densité médecins (pour 10k hab)": {"min": 1, "max": 30, "valeur": 10},
+        "Densité médecins (pour 10k hab)": {"min": 1,  "max": 30, "valeur": 10},
         "Espérance de vie (ans)":          {"min": 70, "max": 86, "valeur": 79},
     },
     "Services": {
-        "Accès commerces (min)":   {"min": 1,  "max": 30, "valeur": 10},
-        "Accès école (min)":       {"min": 1,  "max": 25, "valeur": 8},
-        "Accès transports (min)":  {"min": 1,  "max": 40, "valeur": 15},
+        "Accès commerces (min)":   {"min": 1, "max": 30, "valeur": 10},
+        "Accès école (min)":       {"min": 1, "max": 25, "valeur": 8},
+        "Accès transports (min)":  {"min": 1, "max": 40, "valeur": 15},
     },
     "Participation": {
         "Taux inscription électorale (%)": {"min": 50, "max": 99, "valeur": 75},
@@ -52,8 +52,11 @@ DIMENSIONS = {
 }
 
 # ─────────────────────────────────────────────
-# NORMALISATION (min-max, sens positif)
+# NORMALISATION (min-max, avec sens positif ou inversé)
 # ─────────────────────────────────────────────
+# Les variables listées ci-dessous sont considérées comme défavorables :
+# plus leur valeur est élevée, plus le score doit être faible.
+
 VARIABLES_INVERSES = {
     "Taux de pauvreté (%)",
     "Part bas revenus (%)",
@@ -68,11 +71,28 @@ VARIABLES_INVERSES = {
 }
 
 def normaliser(label, valeur, vmin, vmax):
+    """
+    Normalise une variable entre 0 et 1.
+
+    Pour une variable positive :
+    score = (valeur - min) / (max - min)
+
+    Pour une variable inversée :
+    score = 1 - ((valeur - min) / (max - min))
+
+    Exemple :
+    - Revenu médian : plus il est élevé, meilleur est le score.
+    - Taux de pauvreté : plus il est élevé, plus le score est faible.
+    """
+
     if vmax == vmin:
         return 0.5
+
     n = (valeur - vmin) / (vmax - vmin)
+
     if label in VARIABLES_INVERSES:
         n = 1 - n
+
     return round(np.clip(n, 0, 1), 3)
 
 # ─────────────────────────────────────────────
@@ -81,6 +101,21 @@ def normaliser(label, valeur, vmin, vmax):
 st.title("📊 Constructeur d'indicateur socio-économique")
 st.caption("Inspiré des travaux de Jean Gadrey & Florence Jany-Catrice · Données INSEE")
 
+st.info(
+    """
+    **Variable actualisée : taux de pauvreté communal.**  
+    La variable **Taux de pauvreté (%)** est intégrée dans la dimension **Revenu**.
+    Elle est normalisée avec des bornes observées pour les communes d'Île-de-France :
+    **minimum = 5 %** et **maximum = 44 %**.
+
+    Comme il s'agit d'une variable défavorable, son score est inversé :
+    plus le taux de pauvreté est élevé, plus le score normalisé est faible.
+
+    Source : Insee-DGFiP-Cnaf-Cnav-CCMSA, Filosofi 2021,
+    via l'Observatoire des territoires.
+    """
+)
+
 st.markdown("---")
 
 # ── ÉTAPE 1 : Choix des dimensions
@@ -88,6 +123,7 @@ st.header("① Choisir les dimensions")
 
 cols = st.columns(4)
 dims_choisies = []
+
 for i, dim in enumerate(DIMENSIONS.keys()):
     with cols[i % 4]:
         if st.checkbox(dim, value=True):
@@ -107,6 +143,7 @@ variables_actives = {}
 for dim in dims_choisies:
     with st.expander(f"📂 {dim}", expanded=True):
         cols2 = st.columns(2)
+
         for j, (var, meta) in enumerate(DIMENSIONS[dim].items()):
             with cols2[j % 2]:
                 val = st.slider(
@@ -117,6 +154,7 @@ for dim in dims_choisies:
                     step=0.1,
                     key=f"{dim}_{var}"
                 )
+
                 variables_actives[var] = {
                     "dimension": dim,
                     "valeur": val,
@@ -131,6 +169,7 @@ st.header("③ Pondérer les dimensions")
 
 poids_dims = {}
 cols3 = st.columns(len(dims_choisies))
+
 for i, dim in enumerate(dims_choisies):
     with cols3[i]:
         poids_dims[dim] = st.slider(
@@ -148,8 +187,10 @@ st.header("④ Résultats")
 
 # Normalisation des variables
 rows = []
+
 for var, meta in variables_actives.items():
     norm = normaliser(var, meta["valeur"], meta["min"], meta["max"])
+
     rows.append({
         "Dimension": meta["dimension"],
         "Variable": var,
@@ -162,13 +203,20 @@ df = pd.DataFrame(rows)
 
 # Score par dimension
 scores_dims = {}
+
 for dim in dims_choisies:
     subset = df[df["Dimension"] == dim]
+
     if not subset.empty:
         scores_dims[dim] = round(subset["Score normalisé"].mean(), 3)
 
 # Score global pondéré
-total_poids = sum(poids_dims[d] for d in dims_choisies if poids_dims[d] > 0)
+total_poids = sum(
+    poids_dims[d]
+    for d in dims_choisies
+    if poids_dims[d] > 0
+)
+
 if total_poids == 0:
     st.warning("Augmente les pondérations pour calculer un score.")
     st.stop()
@@ -188,6 +236,7 @@ with col_score:
         else "#e67e22" if score_global >= 0.33
         else "#e74c3c"
     )
+
     st.markdown(
         f"""
         <div style="
@@ -215,14 +264,19 @@ with col_jauge:
             "axis": {"range": [0, 100]},
             "bar": {"color": couleur},
             "steps": [
-                {"range": [0, 33],  "color": "#fadbd8"},
-                {"range": [33, 66], "color": "#fdebd0"},
-                {"range": [66, 100],"color": "#d5f5e3"},
+                {"range": [0, 33],   "color": "#fadbd8"},
+                {"range": [33, 66],  "color": "#fdebd0"},
+                {"range": [66, 100], "color": "#d5f5e3"},
             ]
         },
         title={"text": "Indice synthétique"}
     ))
-    fig_jauge.update_layout(height=280, margin=dict(t=40, b=0))
+
+    fig_jauge.update_layout(
+        height=280,
+        margin=dict(t=40, b=0)
+    )
+
     st.plotly_chart(fig_jauge, use_container_width=True)
 
 st.markdown("---")
@@ -232,8 +286,10 @@ col_radar, col_bar = st.columns(2)
 
 with col_radar:
     st.subheader("Radar des dimensions")
+
     labels = list(scores_dims.keys())
     values = list(scores_dims.values())
+
     values_closed = values + [values[0]]
     labels_closed = labels + [labels[0]]
 
@@ -244,15 +300,23 @@ with col_radar:
         fillcolor="rgba(53,162,235,0.3)",
         line=dict(color="rgba(53,162,235,0.9)")
     ))
+
     fig_radar.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 1]
+            )
+        ),
         showlegend=False,
         height=400
     )
+
     st.plotly_chart(fig_radar, use_container_width=True)
 
 with col_bar:
     st.subheader("Score par dimension")
+
     df_dims = pd.DataFrame({
         "Dimension": list(scores_dims.keys()),
         "Score": [v * 100 for v in scores_dims.values()]
@@ -264,31 +328,84 @@ with col_bar:
         orientation="h",
         marker_color="rgba(53,162,235,0.7)"
     ))
+
     fig_bar.update_layout(
         xaxis=dict(range=[0, 100]),
         height=400,
         margin=dict(l=10, r=10)
     )
+
     st.plotly_chart(fig_bar, use_container_width=True)
 
 st.markdown("---")
 
 # ── TABLEAU DÉTAILLÉ
 st.subheader("Détail des variables")
+
 df_display = df[["Dimension", "Variable", "Valeur", "Score normalisé"]].copy()
 df_display["Score normalisé"] = (df_display["Score normalisé"] * 100).round(1)
-df_display.columns = ["Dimension", "Variable", "Valeur saisie", "Score (0-100)"]
-st.dataframe(df_display, use_container_width=True, hide_index=True)
+
+df_display.columns = [
+    "Dimension",
+    "Variable",
+    "Valeur saisie",
+    "Score (0-100)"
+]
+
+st.dataframe(
+    df_display,
+    use_container_width=True,
+    hide_index=True
+)
+
+st.markdown("---")
+
+# ── BORNES UTILISÉES
+st.subheader("Bornes de normalisation utilisées")
+
+bornes_rows = []
+
+for dimension, variables in DIMENSIONS.items():
+    for variable, meta in variables.items():
+        bornes_rows.append({
+            "Dimension": dimension,
+            "Variable": variable,
+            "Minimum": meta["min"],
+            "Maximum": meta["max"],
+            "Sens": "inversé" if variable in VARIABLES_INVERSES else "positif"
+        })
+
+df_bornes = pd.DataFrame(bornes_rows)
+
+st.dataframe(
+    df_bornes,
+    use_container_width=True,
+    hide_index=True
+)
+
+st.caption(
+    "Pour le taux de pauvreté : bornes observées en Île-de-France dans le fichier "
+    "Filosofi 2021 de l'Observatoire des territoires : minimum 5 %, maximum 44 %."
+)
 
 st.markdown("---")
 
 # ── EXPORT CSV
 st.subheader("Exporter les résultats")
+
 csv = df_display.to_csv(index=False).encode("utf-8")
+
 st.download_button(
     label="📥 Télécharger les résultats (CSV)",
     data=csv,
     file_name="indicateur_socioeconomique.csv",
+    mime="text/csv"
+)
+
+st.caption(
+    "Source : données INSEE / Filosofi 2021 via Observatoire des territoires "
+    "pour le taux de pauvreté · Gadrey & Jany-Catrice · LISS"
+)
     mime="text/csv"
 )
 
