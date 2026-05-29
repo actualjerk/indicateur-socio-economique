@@ -91,7 +91,7 @@ DIMENSIONS = {
                 "unite": "%",
                 "sens": "negatif",
                 "source": "Filosofi 2021, communes d'Île-de-France",
-                "commune_min": "Plusieurs communes, dont Bois-le-Roi (77037)",
+                "commune_min": "28 communes, dont Bois-le-Roi (77037)",
                 "commune_max": "Grigny (91286)"
             },
             "Rapport interdécile du revenu disponible par unité de consommation D9/D1": {
@@ -120,15 +120,15 @@ DIMENSIONS = {
                 "commune_min": "Mouy-sur-Seine (77325)",
                 "commune_max": "Saint-Aubin (91538)"
             },
-            "Sans diplôme": {
-                "min": 5,
-                "max": 50,
-                "valeur": 30,
+            "Part des actifs peu ou pas diplômés parmi les actifs": {
+                "min": 1.0,
+                "max": 47.0,
+                "valeur": 20.0,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
+                "source": "INSEE, Recensement de la population 2021, base communale Emploi-Population active, communes d'Île-de-France",
+                "commune_min": "Milon-la-Chapelle (78406)",
+                "commune_max": "Hautefeuille (77224)"
             },
             "Taux de scolarisation": {
                 "min": 50,
@@ -568,6 +568,7 @@ with st.sidebar:
     st.write("**Taux de pauvreté au seuil de 60 %** : 5 % → 44 %")
     st.write("**Rapport D9/D1** : 2,2 → 8,1")
     st.write("**Diplômés du supérieur** : 9,4 % → 74,2 %")
+    st.write("**Actifs peu ou pas diplômés** : 1,0 % → 47,0 %")
 
 # ─────────────────────────────────────────────
 # 2. CHOIX DES VARIABLES ET VALEURS
@@ -770,6 +771,38 @@ with st.expander("4. Détail du calcul par variable", expanded=False):
                 """
             )
 
+    if "Éducation" in scores_dimensions:
+        st.subheader("Zoom sur la dimension Éducation")
+
+        df_education = df_resultats[df_resultats["Dimension"] == "Éducation"][
+            [
+                "Variable",
+                "Valeur",
+                "Unité",
+                "Min",
+                "Commune borne min",
+                "Max",
+                "Commune borne max",
+                "Score normalisé 0-100",
+                "Source"
+            ]
+        ]
+
+        st.dataframe(df_education, use_container_width=True)
+
+        with st.expander("🧠 Pourquoi la part des actifs peu ou pas diplômés réduit-elle le score ?", expanded=False):
+            st.write(
+                """
+                La variable « Part des actifs peu ou pas diplômés parmi les actifs » mesure la part des actifs
+                sans diplôme, avec un CEP, ou avec le BEPC / brevet des collèges / DNB.
+
+                Une valeur élevée indique une plus forte proportion d'actifs faiblement diplômés.
+                Dans un indicateur socio-économique, cette situation est interprétée comme moins favorable.
+
+                C'est pourquoi, dans le calcul, plus cette part augmente, plus le score de cette variable diminue.
+                """
+            )
+
 # ─────────────────────────────────────────────
 # 5. EXPORT
 # ─────────────────────────────────────────────
@@ -808,8 +841,9 @@ with st.expander("🧩 Note pédagogique : dimension ou variable ?", expanded=Fa
         - Taux de pauvreté au seuil de 60 % du revenu médian
         - Rapport interdécile D9/D1
 
-        Exemple dans la dimension éducation :
+        Exemples dans la dimension éducation :
         - Part des diplômés du supérieur parmi les personnes de 15 ans ou plus non scolarisées
+        - Part des actifs peu ou pas diplômés parmi les actifs
 
         Le choix des dimensions et des variables n'est pas neutre.
         Il reflète une certaine définition de ce que l'on considère comme une situation sociale favorable ou défavorable.
