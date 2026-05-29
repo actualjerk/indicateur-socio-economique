@@ -82,13 +82,13 @@ DIMENSIONS = {
                 "sens": "positif",
                 "source": "Filosofi 2021, communes d'Île-de-France"
             },
-            "Taux de pauvreté": {
+            "Taux de pauvreté au seuil de 60 % du revenu médian": {
                 "min": 5,
                 "max": 44,
                 "valeur": 18,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Filosofi, communes d'Île-de-France"
+                "source": "Filosofi 2021, communes d'Île-de-France"
             },
             "Rapport interdécile du revenu disponible par unité de consommation D9/D1": {
                 "min": 2.2,
@@ -458,7 +458,7 @@ with st.expander("ℹ️ Comprendre la logique de construction de l'indicateur",
 
         **2. Choix des variables**  
         Une variable est une donnée précise utilisée pour mesurer une dimension.  
-        Par exemple, dans la dimension revenu, on peut retenir le revenu médian, le taux de pauvreté ou le rapport interdécile D9/D1.
+        Par exemple, dans la dimension revenu, on peut retenir le revenu médian, le taux de pauvreté au seuil de 60 % du revenu médian ou le rapport interdécile D9/D1.
 
         **3. Pondération**  
         Les élèves peuvent ensuite décider du poids de chaque variable et du poids de chaque dimension.
@@ -526,8 +526,8 @@ with st.sidebar:
 
     st.header("📌 Bornes importantes")
     st.write("**Revenu médian** : 14 790 € → 48 010 €")
+    st.write("**Taux de pauvreté au seuil de 60 %** : 5 % → 44 %")
     st.write("**Rapport D9/D1** : 2,2 → 8,1")
-    st.write("**Taux de pauvreté** : 5 % → 44 %")
 
 # ─────────────────────────────────────────────
 # 2. CHOIX DES VARIABLES ET VALEURS
@@ -566,7 +566,7 @@ with st.expander("2. Choisir les variables dans chaque dimension", expanded=True
 
                 with col_check:
                     actif = st.checkbox(
-                        label="",
+                        label=f"Sélectionner {nom_variable}",
                         value=True,
                         key=f"actif_{nom_dimension}_{nom_variable}",
                         label_visibility="collapsed"
@@ -761,7 +761,7 @@ with st.expander("🧩 Note pédagogique : dimension ou variable ?", expanded=Fa
 
         Exemple dans la dimension revenu :
         - Revenu médian
-        - Taux de pauvreté
+        - Taux de pauvreté au seuil de 60 % du revenu médian
         - Rapport interdécile D9/D1
 
         Le choix des dimensions et des variables n'est pas neutre.
