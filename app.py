@@ -71,7 +71,7 @@ st.markdown(
 # ─────────────────────────────────────────────
 
 DIMENSIONS = {
-    "Revenu": {
+    "Revenus et inégalités": {
         "description": "Cette dimension mesure le niveau de vie, la pauvreté et les inégalités monétaires.",
         "variables": {
             "Revenu médian": {
@@ -80,7 +80,9 @@ DIMENSIONS = {
                 "valeur": 25210,
                 "unite": "€",
                 "sens": "positif",
-                "source": "Filosofi 2021, communes d'Île-de-France"
+                "source": "Filosofi 2021, communes d'Île-de-France",
+                "commune_min": "Grigny (91286)",
+                "commune_max": "Neuilly-sur-Seine (92051)"
             },
             "Taux de pauvreté au seuil de 60 % du revenu médian": {
                 "min": 5,
@@ -88,7 +90,9 @@ DIMENSIONS = {
                 "valeur": 18,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Filosofi 2021, communes d'Île-de-France"
+                "source": "Filosofi 2021, communes d'Île-de-France",
+                "commune_min": "Plusieurs communes, dont Bois-le-Roi (77037)",
+                "commune_max": "Grigny (91286)"
             },
             "Rapport interdécile du revenu disponible par unité de consommation D9/D1": {
                 "min": 2.2,
@@ -96,15 +100,9 @@ DIMENSIONS = {
                 "valeur": 4.4,
                 "unite": "",
                 "sens": "negatif",
-                "source": "Filosofi 2021, communes d'Île-de-France"
-            },
-            "Part des bas revenus": {
-                "min": 5,
-                "max": 40,
-                "valeur": 20,
-                "unite": "%",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Filosofi 2021, communes d'Île-de-France",
+                "commune_min": "Moncourt-Fromonville (77302)",
+                "commune_max": "Neuilly-sur-Seine (92051)"
             },
         },
     },
@@ -112,13 +110,15 @@ DIMENSIONS = {
     "Éducation": {
         "description": "Cette dimension mesure le niveau de formation, la scolarisation et l'accès aux diplômes.",
         "variables": {
-            "Diplômés du supérieur": {
-                "min": 5,
-                "max": 60,
-                "valeur": 25,
+            "Part des diplômés du supérieur parmi les personnes de 15 ans ou plus non scolarisées": {
+                "min": 9.4,
+                "max": 74.2,
+                "valeur": 35.0,
                 "unite": "%",
                 "sens": "positif",
-                "source": "Borne indicative à discuter"
+                "source": "INSEE, Recensement de la population 2021, base communale Diplômes-Formation, communes d'Île-de-France",
+                "commune_min": "Mouy-sur-Seine (77325)",
+                "commune_max": "Saint-Aubin (91538)"
             },
             "Sans diplôme": {
                 "min": 5,
@@ -126,7 +126,9 @@ DIMENSIONS = {
                 "valeur": 30,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Taux de scolarisation": {
                 "min": 50,
@@ -134,7 +136,9 @@ DIMENSIONS = {
                 "valeur": 80,
                 "unite": "%",
                 "sens": "positif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
         },
     },
@@ -148,7 +152,9 @@ DIMENSIONS = {
                 "valeur": 12,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Part des contrats précaires": {
                 "min": 5,
@@ -156,7 +162,9 @@ DIMENSIONS = {
                 "valeur": 20,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Taux d'activité": {
                 "min": 45,
@@ -164,7 +172,9 @@ DIMENSIONS = {
                 "valeur": 70,
                 "unite": "%",
                 "sens": "positif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
         },
     },
@@ -178,7 +188,9 @@ DIMENSIONS = {
                 "valeur": 82,
                 "unite": "ans",
                 "sens": "positif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Médecins pour 1000 habitants": {
                 "min": 0,
@@ -186,7 +198,9 @@ DIMENSIONS = {
                 "valeur": 3,
                 "unite": "",
                 "sens": "positif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Mortalité prématurée": {
                 "min": 100,
@@ -194,7 +208,9 @@ DIMENSIONS = {
                 "valeur": 250,
                 "unite": "pour 100 000",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
         },
     },
@@ -208,7 +224,9 @@ DIMENSIONS = {
                 "valeur": 20,
                 "unite": "%",
                 "sens": "positif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Mal-logement": {
                 "min": 0,
@@ -216,7 +234,9 @@ DIMENSIONS = {
                 "valeur": 10,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Surpopulation des logements": {
                 "min": 0,
@@ -224,7 +244,9 @@ DIMENSIONS = {
                 "valeur": 8,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
         },
     },
@@ -238,7 +260,9 @@ DIMENSIONS = {
                 "valeur": 60,
                 "unite": "%",
                 "sens": "positif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Familles monoparentales": {
                 "min": 5,
@@ -246,7 +270,9 @@ DIMENSIONS = {
                 "valeur": 18,
                 "unite": "%",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Criminalité pour 1000 habitants": {
                 "min": 0,
@@ -254,7 +280,9 @@ DIMENSIONS = {
                 "valeur": 35,
                 "unite": "",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
         },
     },
@@ -268,7 +296,9 @@ DIMENSIONS = {
                 "valeur": 25,
                 "unite": "%",
                 "sens": "positif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Pollution de l'air": {
                 "min": 5,
@@ -276,7 +306,9 @@ DIMENSIONS = {
                 "valeur": 20,
                 "unite": "µg/m³",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
             "Densité de population": {
                 "min": 50,
@@ -284,7 +316,9 @@ DIMENSIONS = {
                 "valeur": 5000,
                 "unite": "hab/km²",
                 "sens": "negatif",
-                "source": "Borne indicative à discuter"
+                "source": "Borne indicative à discuter",
+                "commune_min": "À documenter",
+                "commune_max": "À documenter"
             },
         },
     },
@@ -352,6 +386,8 @@ def calculer_indicateur(dimensions_choisies, variables_choisies, valeurs, poids_
                 "Unité": infos.get("unite", ""),
                 "Min": infos["min"],
                 "Max": infos["max"],
+                "Commune borne min": infos.get("commune_min", ""),
+                "Commune borne max": infos.get("commune_max", ""),
                 "Poids variable": poids,
                 "Score normalisé 0-1": round(score, 4),
                 "Score normalisé 0-100": round(score * 100, 2),
@@ -423,6 +459,8 @@ def tableau_variables():
                 "Variable": nom_variable,
                 "Min": infos["min"],
                 "Max": infos["max"],
+                "Commune borne min": infos.get("commune_min", ""),
+                "Commune borne max": infos.get("commune_max", ""),
                 "Unité": infos.get("unite", ""),
                 "Source": infos.get("source", "")
             })
@@ -454,11 +492,12 @@ with st.expander("ℹ️ Comprendre la logique de construction de l'indicateur",
         L'indicateur est construit en trois étapes :
 
         **1. Choix des dimensions**  
-        Une dimension correspond à un grand domaine de la réalité sociale ou économique : revenu, santé, emploi, logement, etc.
+        Une dimension correspond à un grand domaine de la réalité sociale ou économique : revenus et inégalités, santé, emploi, logement, etc.
 
         **2. Choix des variables**  
         Une variable est une donnée précise utilisée pour mesurer une dimension.  
-        Par exemple, dans la dimension revenu, on peut retenir le revenu médian, le taux de pauvreté au seuil de 60 % du revenu médian ou le rapport interdécile D9/D1.
+        Par exemple, dans la dimension revenus et inégalités, on peut retenir le revenu médian,
+        le taux de pauvreté au seuil de 60 % du revenu médian ou le rapport interdécile D9/D1.
 
         **3. Pondération**  
         Les élèves peuvent ensuite décider du poids de chaque variable et du poids de chaque dimension.
@@ -528,6 +567,7 @@ with st.sidebar:
     st.write("**Revenu médian** : 14 790 € → 48 010 €")
     st.write("**Taux de pauvreté au seuil de 60 %** : 5 % → 44 %")
     st.write("**Rapport D9/D1** : 2,2 → 8,1")
+    st.write("**Diplômés du supérieur** : 9,4 % → 74,2 %")
 
 # ─────────────────────────────────────────────
 # 2. CHOIX DES VARIABLES ET VALEURS
@@ -676,7 +716,7 @@ with st.expander("4. Détail du calcul par variable", expanded=False):
     st.write(
         """
         Le tableau ci-dessous montre uniquement les variables retenues dans le calcul.
-        Il permet de vérifier les bornes, le poids et le score obtenu.
+        Il permet de vérifier les bornes, les communes associées aux bornes, le poids et le score obtenu.
         """
     )
 
@@ -688,7 +728,9 @@ with st.expander("4. Détail du calcul par variable", expanded=False):
                 "Valeur",
                 "Unité",
                 "Min",
+                "Commune borne min",
                 "Max",
+                "Commune borne max",
                 "Poids variable",
                 "Score normalisé 0-100",
                 "Source"
@@ -697,22 +739,24 @@ with st.expander("4. Détail du calcul par variable", expanded=False):
         use_container_width=True
     )
 
-    if "Revenu" in scores_dimensions:
-        st.subheader("Zoom sur la dimension Revenu")
+    if "Revenus et inégalités" in scores_dimensions:
+        st.subheader("Zoom sur la dimension Revenus et inégalités")
 
-        df_revenu = df_resultats[df_resultats["Dimension"] == "Revenu"][
+        df_revenus = df_resultats[df_resultats["Dimension"] == "Revenus et inégalités"][
             [
                 "Variable",
                 "Valeur",
                 "Unité",
                 "Min",
+                "Commune borne min",
                 "Max",
+                "Commune borne max",
                 "Score normalisé 0-100",
                 "Source"
             ]
         ]
 
-        st.dataframe(df_revenu, use_container_width=True)
+        st.dataframe(df_revenus, use_container_width=True)
 
         with st.expander("🧠 Pourquoi le rapport D9/D1 réduit-il le score ?", expanded=False):
             st.write(
@@ -751,7 +795,7 @@ with st.expander("🧩 Note pédagogique : dimension ou variable ?", expanded=Fa
         Une **dimension** est un grand domaine retenu pour évaluer la situation sociale ou économique d'une commune.
 
         Exemples :
-        - Revenu
+        - Revenus et inégalités
         - Santé
         - Emploi
         - Logement
@@ -759,10 +803,13 @@ with st.expander("🧩 Note pédagogique : dimension ou variable ?", expanded=Fa
 
         Une **variable** est une donnée statistique précise utilisée pour mesurer une dimension.
 
-        Exemple dans la dimension revenu :
+        Exemple dans la dimension revenus et inégalités :
         - Revenu médian
         - Taux de pauvreté au seuil de 60 % du revenu médian
         - Rapport interdécile D9/D1
+
+        Exemple dans la dimension éducation :
+        - Part des diplômés du supérieur parmi les personnes de 15 ans ou plus non scolarisées
 
         Le choix des dimensions et des variables n'est pas neutre.
         Il reflète une certaine définition de ce que l'on considère comme une situation sociale favorable ou défavorable.
