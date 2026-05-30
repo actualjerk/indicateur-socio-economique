@@ -1,852 +1,583 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import plotly.express as px
 import plotly.graph_objects as go
 
-# ─────────────────────────────────────────────
-# CONFIGURATION DE LA PAGE
-# ─────────────────────────────────────────────
+# ============================================================
+# Prototype graphique : style "carte interactive Île-de-France"
+# À intégrer progressivement dans ton app.py existant.
+# Remplace le jeu de données ci-dessous par ton DataFrame final.
+# ============================================================
+
 st.set_page_config(
-    page_title="Indicateur Socio-Économique",
-    page_icon="📊",
-    layout="wide"
+    page_title="ISS communal participatif — Île-de-France",
+    page_icon="🗺️",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────
-# STYLE
-# ─────────────────────────────────────────────
+# -----------------------------
+# CSS général
+# -----------------------------
 st.markdown(
     """
     <style>
+    :root {
+        --bg: #f5f3ee;
+        --card: #ffffff;
+        --ink: #172033;
+        --muted: #667085;
+        --blue: #243b63;
+        --blue-soft: #e8eef8;
+        --green: #2e7d61;
+        --orange: #c97822;
+        --red: #b93838;
+        --border: #e4e7ec;
+    }
+
+    .stApp {
+        background: linear-gradient(180deg, #f5f3ee 0%, #eef2f6 100%);
+        color: var(--ink);
+    }
+
+    section[data-testid="stSidebar"] {
+        background: #172033;
+        color: white;
+    }
+
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] span {
+        color: white !important;
+    }
+
     .main-title {
-        font-size: 2.2rem;
+        padding: 1.2rem 1.4rem;
+        background: linear-gradient(135deg, #172033 0%, #243b63 65%, #2e7d61 100%);
+        color: white;
+        border-radius: 26px;
+        margin-bottom: 1rem;
+        box-shadow: 0 14px 35px rgba(23, 32, 51, 0.22);
+    }
+
+    .main-title h1 {
+        margin: 0;
+        font-size: 2.15rem;
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+    }
+
+    .main-title p {
+        margin: .45rem 0 0 0;
+        color: rgba(255,255,255,.86);
+        font-size: 1.03rem;
+    }
+
+    .stepbar {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: .7rem;
+        margin: 1rem 0 1.2rem 0;
+    }
+
+    .step {
+        background: rgba(255,255,255,.78);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: .8rem .9rem;
+        font-weight: 700;
+        color: var(--blue);
+        box-shadow: 0 8px 22px rgba(23, 32, 51, .06);
+    }
+
+    .step span {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 1.55rem;
+        height: 1.55rem;
+        margin-right: .35rem;
+        border-radius: 999px;
+        background: var(--blue-soft);
+        color: var(--blue);
+        font-size: .85rem;
+    }
+
+    .card {
+        background: rgba(255,255,255,.86);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 1.1rem 1.2rem;
+        box-shadow: 0 12px 30px rgba(23, 32, 51, .08);
+        margin-bottom: 1rem;
+    }
+
+    .card h3 {
+        margin-top: 0;
+        color: var(--blue);
+        letter-spacing: -0.02em;
+    }
+
+    .metric-card {
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 1rem;
+        min-height: 126px;
+        box-shadow: 0 10px 24px rgba(23, 32, 51, .07);
+    }
+
+    .metric-label {
+        color: var(--muted);
+        font-size: .86rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .metric-value {
+        font-size: 2.1rem;
         font-weight: 800;
-        margin-bottom: 0.2rem;
+        color: var(--blue);
+        line-height: 1.1;
+        margin-top: .35rem;
     }
-    .subtitle {
-        font-size: 1.05rem;
-        color: #555;
-        margin-bottom: 1.4rem;
+
+    .metric-comment {
+        color: var(--muted);
+        font-size: .92rem;
+        margin-top: .3rem;
     }
-    .section-box {
-        background-color: #f7f7f9;
-        border-radius: 14px;
-        padding: 16px;
-        border: 1px solid #e6e6eb;
-        margin-bottom: 14px;
+
+    .alert-red {
+        border-left: 7px solid var(--red);
+        background: #fff4f4;
+        color: #6f1d1d;
+        padding: .9rem 1rem;
+        border-radius: 18px;
+        font-weight: 650;
     }
-    .small-note {
-        color: #666;
-        font-size: 0.9rem;
+
+    .alert-orange {
+        border-left: 7px solid var(--orange);
+        background: #fff7ed;
+        color: #733f12;
+        padding: .9rem 1rem;
+        border-radius: 18px;
+        font-weight: 650;
     }
-    .variable-title {
-        background-color: #e8f1ff;
-        color: #1f4e79;
-        font-size: 1.15rem;
-        font-weight: 700;
-        padding: 10px 14px;
-        border-radius: 10px;
-        border-left: 5px solid #1f77b4;
-        margin-top: 8px;
-        margin-bottom: 8px;
+
+    .alert-green {
+        border-left: 7px solid var(--green);
+        background: #eefaf5;
+        color: #18513d;
+        padding: .9rem 1rem;
+        border-radius: 18px;
+        font-weight: 650;
     }
-    .dimension-title {
-        background-color: #e8f1ff;
-        color: #1f4e79;
-        font-size: 1.2rem;
-        font-weight: 700;
-        padding: 12px 16px;
-        border-radius: 10px;
-        border-left: 5px solid #1f77b4;
-        margin-top: 12px;
-        margin-bottom: 8px;
+
+    .method-box {
+        background: #f8fafc;
+        border: 1px dashed #98a2b3;
+        border-radius: 20px;
+        padding: 1rem;
+        color: #344054;
+        font-size: .96rem;
+    }
+
+    div[data-testid="stMetric"] {
+        background: white;
+        padding: 1rem;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        box-shadow: 0 8px 22px rgba(23, 32, 51, .06);
+    }
+
+    .stButton > button {
+        border-radius: 999px;
+        border: 0;
+        background: #243b63;
+        color: white;
+        font-weight: 800;
+        padding: .7rem 1rem;
+    }
+
+    .stButton > button:hover {
+        background: #2e7d61;
+        color: white;
     }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
-# ─────────────────────────────────────────────
-# DONNÉES : DIMENSIONS, VARIABLES ET BORNES
-# ─────────────────────────────────────────────
+# -----------------------------
+# Données de démonstration
+# -----------------------------
+# Les scores ci-dessous sont déjà normalisés sur 0-100 pour faciliter le prototype.
+# Dans ton app réelle, tu remplaceras ces colonnes par les normalisations calculées.
+communes_demo = pd.DataFrame(
+    [
+        {
+            "commune": "Paris",
+            "departement": "75",
+            "lat": 48.8566,
+            "lon": 2.3522,
+            "revenus_inegalites": 58,
+            "education": 78,
+            "emploi": 69,
+            "logement": 42,
+            "sante_sociale": 70,
+            "revenu_median": 30300,
+            "taux_pauvrete": 16.2,
+            "d9_d1": 6.4,
+        },
+        {
+            "commune": "Versailles",
+            "departement": "78",
+            "lat": 48.8049,
+            "lon": 2.1204,
+            "revenus_inegalites": 74,
+            "education": 82,
+            "emploi": 75,
+            "logement": 56,
+            "sante_sociale": 73,
+            "revenu_median": 34600,
+            "taux_pauvrete": 8.9,
+            "d9_d1": 4.1,
+        },
+        {
+            "commune": "Saint-Denis",
+            "departement": "93",
+            "lat": 48.9362,
+            "lon": 2.3574,
+            "revenus_inegalites": 34,
+            "education": 41,
+            "emploi": 38,
+            "logement": 35,
+            "sante_sociale": 44,
+            "revenu_median": 17600,
+            "taux_pauvrete": 33.0,
+            "d9_d1": 4.8,
+        },
+        {
+            "commune": "Cergy",
+            "departement": "95",
+            "lat": 49.0361,
+            "lon": 2.0631,
+            "revenus_inegalites": 49,
+            "education": 57,
+            "emploi": 53,
+            "logement": 50,
+            "sante_sociale": 55,
+            "revenu_median": 22600,
+            "taux_pauvrete": 20.4,
+            "d9_d1": 3.8,
+        },
+        {
+            "commune": "Créteil",
+            "departement": "94",
+            "lat": 48.7904,
+            "lon": 2.4556,
+            "revenus_inegalites": 52,
+            "education": 58,
+            "emploi": 57,
+            "logement": 48,
+            "sante_sociale": 59,
+            "revenu_median": 23900,
+            "taux_pauvrete": 18.7,
+            "d9_d1": 3.9,
+        },
+        {
+            "commune": "Évry-Courcouronnes",
+            "departement": "91",
+            "lat": 48.6238,
+            "lon": 2.4292,
+            "revenus_inegalites": 45,
+            "education": 51,
+            "emploi": 50,
+            "logement": 47,
+            "sante_sociale": 53,
+            "revenu_median": 21300,
+            "taux_pauvrete": 22.6,
+            "d9_d1": 3.7,
+        },
+        {
+            "commune": "Meaux",
+            "departement": "77",
+            "lat": 48.9607,
+            "lon": 2.8787,
+            "revenus_inegalites": 47,
+            "education": 48,
+            "emploi": 49,
+            "logement": 52,
+            "sante_sociale": 50,
+            "revenu_median": 21700,
+            "taux_pauvrete": 21.3,
+            "d9_d1": 3.5,
+        },
+        {
+            "commune": "Nanterre",
+            "departement": "92",
+            "lat": 48.8924,
+            "lon": 2.2153,
+            "revenus_inegalites": 55,
+            "education": 62,
+            "emploi": 60,
+            "logement": 45,
+            "sante_sociale": 61,
+            "revenu_median": 26100,
+            "taux_pauvrete": 17.8,
+            "d9_d1": 4.7,
+        },
+    ]
+)
 
 DIMENSIONS = {
-    "Revenus et inégalités": {
-        "description": "Cette dimension mesure le niveau de vie, la pauvreté et les inégalités monétaires.",
-        "variables": {
-            "Revenu médian": {
-                "min": 14790,
-                "max": 48010,
-                "valeur": 25210,
-                "unite": "€",
-                "sens": "positif",
-                "source": "Filosofi 2021, communes d'Île-de-France",
-                "commune_min": "Grigny (91286)",
-                "commune_max": "Neuilly-sur-Seine (92051)"
-            },
-            "Taux de pauvreté au seuil de 60 % du revenu médian": {
-                "min": 5,
-                "max": 44,
-                "valeur": 18,
-                "unite": "%",
-                "sens": "negatif",
-                "source": "Filosofi 2021, communes d'Île-de-France",
-                "commune_min": "28 communes, dont Bois-le-Roi (77037)",
-                "commune_max": "Grigny (91286)"
-            },
-            "Rapport interdécile du revenu disponible par unité de consommation D9/D1": {
-                "min": 2.2,
-                "max": 8.1,
-                "valeur": 4.4,
-                "unite": "",
-                "sens": "negatif",
-                "source": "Filosofi 2021, communes d'Île-de-France",
-                "commune_min": "Moncourt-Fromonville (77302)",
-                "commune_max": "Neuilly-sur-Seine (92051)"
-            },
-        },
-    },
-
-    "Éducation": {
-        "description": "Cette dimension mesure le niveau de formation, la scolarisation et l'accès aux diplômes.",
-        "variables": {
-            "Part des diplômés du supérieur parmi les personnes de 15 ans ou plus non scolarisées": {
-                "min": 9.4,
-                "max": 74.2,
-                "valeur": 35.0,
-                "unite": "%",
-                "sens": "positif",
-                "source": "INSEE, Recensement de la population 2021, base communale Diplômes-Formation, communes d'Île-de-France",
-                "commune_min": "Mouy-sur-Seine (77325)",
-                "commune_max": "Saint-Aubin (91538)"
-            },
-            "Part des actifs peu ou pas diplômés parmi les actifs": {
-                "min": 1.0,
-                "max": 47.0,
-                "valeur": 20.0,
-                "unite": "%",
-                "sens": "negatif",
-                "source": "INSEE, Recensement de la population 2021, base communale Emploi-Population active, communes d'Île-de-France",
-                "commune_min": "Milon-la-Chapelle (78406)",
-                "commune_max": "Hautefeuille (77224)"
-            },
-            "Taux de scolarisation": {
-                "min": 50,
-                "max": 99,
-                "valeur": 80,
-                "unite": "%",
-                "sens": "positif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-        },
-    },
-
-    "Emploi": {
-        "description": "Cette dimension mesure l'accès à l'emploi, le chômage et la stabilité professionnelle.",
-        "variables": {
-            "Taux de chômage": {
-                "min": 2,
-                "max": 30,
-                "valeur": 12,
-                "unite": "%",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Part des contrats précaires": {
-                "min": 5,
-                "max": 40,
-                "valeur": 20,
-                "unite": "%",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Taux d'activité": {
-                "min": 45,
-                "max": 85,
-                "valeur": 70,
-                "unite": "%",
-                "sens": "positif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-        },
-    },
-
-    "Santé": {
-        "description": "Cette dimension mesure l'état de santé et l'accès potentiel aux soins.",
-        "variables": {
-            "Espérance de vie": {
-                "min": 70,
-                "max": 90,
-                "valeur": 82,
-                "unite": "ans",
-                "sens": "positif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Médecins pour 1000 habitants": {
-                "min": 0,
-                "max": 10,
-                "valeur": 3,
-                "unite": "",
-                "sens": "positif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Mortalité prématurée": {
-                "min": 100,
-                "max": 500,
-                "valeur": 250,
-                "unite": "pour 100 000",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-        },
-    },
-
-    "Logement": {
-        "description": "Cette dimension mesure les conditions de logement et l'accès au logement social.",
-        "variables": {
-            "Part des logements sociaux": {
-                "min": 0,
-                "max": 60,
-                "valeur": 20,
-                "unite": "%",
-                "sens": "positif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Mal-logement": {
-                "min": 0,
-                "max": 30,
-                "valeur": 10,
-                "unite": "%",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Surpopulation des logements": {
-                "min": 0,
-                "max": 25,
-                "valeur": 8,
-                "unite": "%",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-        },
-    },
-
-    "Cohésion sociale": {
-        "description": "Cette dimension mesure les liens sociaux, la participation et certaines fragilités sociales.",
-        "variables": {
-            "Participation électorale": {
-                "min": 30,
-                "max": 90,
-                "valeur": 60,
-                "unite": "%",
-                "sens": "positif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Familles monoparentales": {
-                "min": 5,
-                "max": 40,
-                "valeur": 18,
-                "unite": "%",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Criminalité pour 1000 habitants": {
-                "min": 0,
-                "max": 100,
-                "valeur": 35,
-                "unite": "",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-        },
-    },
-
-    "Environnement": {
-        "description": "Cette dimension mesure la qualité du cadre de vie environnemental.",
-        "variables": {
-            "Espaces verts": {
-                "min": 0,
-                "max": 80,
-                "valeur": 25,
-                "unite": "%",
-                "sens": "positif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Pollution de l'air": {
-                "min": 5,
-                "max": 40,
-                "valeur": 20,
-                "unite": "µg/m³",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-            "Densité de population": {
-                "min": 50,
-                "max": 25000,
-                "valeur": 5000,
-                "unite": "hab/km²",
-                "sens": "negatif",
-                "source": "Borne indicative à discuter",
-                "commune_min": "À documenter",
-                "commune_max": "À documenter"
-            },
-        },
-    },
+    "revenus_inegalites": "Revenus et inégalités",
+    "education": "Éducation",
+    "emploi": "Emploi",
+    "logement": "Logement",
+    "sante_sociale": "Santé sociale",
 }
 
-# ─────────────────────────────────────────────
-# FONCTIONS
-# ─────────────────────────────────────────────
+# -----------------------------
+# Sidebar : choix et pondérations
+# -----------------------------
+st.sidebar.markdown("## 🗺️ Carte interactive")
+st.sidebar.markdown("Choisis une commune, puis modifie les pondérations pour observer l'effet sur le score.")
 
-def normaliser(valeur, vmin, vmax, sens="positif"):
-    if vmax == vmin:
-        return 0.0
-
-    score = (valeur - vmin) / (vmax - vmin)
-
-    if sens == "negatif":
-        score = 1 - score
-
-    return float(np.clip(score, 0, 1))
-
-
-def moyenne_ponderee(scores, poids):
-    scores = np.array(scores, dtype=float)
-    poids = np.array(poids, dtype=float)
-
-    if len(scores) == 0 or poids.sum() == 0:
-        return 0.0
-
-    return float(np.average(scores, weights=poids))
-
-
-def calculer_indicateur(dimensions_choisies, variables_choisies, valeurs, poids_variables, poids_dimensions):
-    resultats_variables = []
-    scores_dimensions = {}
-
-    for nom_dimension in dimensions_choisies:
-        variables_dimension = variables_choisies.get(nom_dimension, [])
-
-        if len(variables_dimension) == 0:
-            continue
-
-        scores_var_dim = []
-        poids_var_dim = []
-
-        for nom_variable in variables_dimension:
-            infos = DIMENSIONS[nom_dimension]["variables"][nom_variable]
-
-            valeur = valeurs[nom_variable]
-            poids = poids_variables[nom_variable]
-
-            score = normaliser(
-                valeur=valeur,
-                vmin=infos["min"],
-                vmax=infos["max"],
-                sens=infos.get("sens", "positif")
-            )
-
-            scores_var_dim.append(score)
-            poids_var_dim.append(poids)
-
-            resultats_variables.append({
-                "Dimension": nom_dimension,
-                "Variable": nom_variable,
-                "Valeur": valeur,
-                "Unité": infos.get("unite", ""),
-                "Min": infos["min"],
-                "Max": infos["max"],
-                "Commune borne min": infos.get("commune_min", ""),
-                "Commune borne max": infos.get("commune_max", ""),
-                "Poids variable": poids,
-                "Score normalisé 0-1": round(score, 4),
-                "Score normalisé 0-100": round(score * 100, 2),
-                "Source": infos.get("source", "")
-            })
-
-        score_dimension = moyenne_ponderee(scores_var_dim, poids_var_dim)
-        scores_dimensions[nom_dimension] = score_dimension
-
-    if len(scores_dimensions) == 0:
-        return resultats_variables, scores_dimensions, 0.0
-
-    indicateur_global = moyenne_ponderee(
-        list(scores_dimensions.values()),
-        [poids_dimensions[dim] for dim in scores_dimensions.keys()]
-    )
-
-    return resultats_variables, scores_dimensions, indicateur_global
-
-
-def creer_radar(scores_dimensions):
-    dimensions = list(scores_dimensions.keys())
-    scores = [scores_dimensions[dim] * 100 for dim in dimensions]
-
-    if len(dimensions) == 0:
-        return go.Figure()
-
-    dimensions_fermees = dimensions + [dimensions[0]]
-    scores_fermes = scores + [scores[0]]
-
-    fig = go.Figure()
-
-    fig.add_trace(
-        go.Scatterpolar(
-            r=scores_fermes,
-            theta=dimensions_fermees,
-            fill="toself",
-            name="Score des dimensions",
-            line=dict(width=3)
-        )
-    )
-
-    fig.update_layout(
-        height=720,
-        margin=dict(l=90, r=90, t=80, b=80),
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                tickfont=dict(size=12)
-            ),
-            angularaxis=dict(
-                tickfont=dict(size=14)
-            )
-        ),
-        showlegend=True
-    )
-
-    return fig
-
-
-def tableau_variables():
-    lignes = []
-
-    for nom_dimension, contenu in DIMENSIONS.items():
-        for nom_variable, infos in contenu["variables"].items():
-            lignes.append({
-                "Dimension": nom_dimension,
-                "Variable": nom_variable,
-                "Min": infos["min"],
-                "Max": infos["max"],
-                "Commune borne min": infos.get("commune_min", ""),
-                "Commune borne max": infos.get("commune_max", ""),
-                "Unité": infos.get("unite", ""),
-                "Source": infos.get("source", "")
-            })
-
-    return pd.DataFrame(lignes)
-
-
-# ─────────────────────────────────────────────
-# TITRE
-# ─────────────────────────────────────────────
-
-st.markdown(
-    '<div class="main-title">📊 Indicateur Socio-Économique communal</div>',
-    unsafe_allow_html=True
+commune_choisie = st.sidebar.selectbox(
+    "Commune sélectionnée",
+    communes_demo["commune"].sort_values().tolist(),
 )
 
+st.sidebar.markdown("---")
+st.sidebar.markdown("### ⚖️ Pondérations")
+st.sidebar.caption("Les poids sont normalisés automatiquement pour totaliser 100 %.")
+
+poids_bruts = {}
+for col, label in DIMENSIONS.items():
+    poids_bruts[col] = st.sidebar.slider(label, 0, 10, 5)
+
+total_poids = sum(poids_bruts.values())
+if total_poids == 0:
+    poids = {k: 1 / len(poids_bruts) for k in poids_bruts}
+else:
+    poids = {k: v / total_poids for k, v in poids_bruts.items()}
+
+st.sidebar.markdown("---")
+afficher_methode = st.sidebar.toggle("Afficher les notes méthodologiques", value=True)
+
+# -----------------------------
+# Calcul du score global
+# -----------------------------
+def calculer_score_global(df: pd.DataFrame, poids_normalises: dict) -> pd.DataFrame:
+    df = df.copy()
+    df["score_global"] = 0.0
+    for col, p in poids_normalises.items():
+        df["score_global"] += df[col] * p
+    df["score_global"] = df["score_global"].round(1)
+    return df
+
+communes = calculer_score_global(communes_demo, poids)
+selection = communes.loc[communes["commune"] == commune_choisie].iloc[0]
+
+# -----------------------------
+# En-tête
+# -----------------------------
 st.markdown(
-    '<div class="subtitle">Prototype pédagogique participatif permettant de choisir des dimensions, des variables et des pondérations.</div>',
-    unsafe_allow_html=True
+    """
+    <div class="main-title">
+        <h1>ISS communal participatif — Île-de-France</h1>
+        <p>Explorer les communes, visualiser les écarts territoriaux et discuter collectivement les choix de construction de l'indicateur.</p>
+    </div>
+    <div class="stepbar">
+        <div class="step"><span>1</span>Choisir</div>
+        <div class="step"><span>2</span>Pondérer</div>
+        <div class="step"><span>3</span>Cartographier</div>
+        <div class="step"><span>4</span>Comparer</div>
+        <div class="step"><span>5</span>Débattre</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
-# ─────────────────────────────────────────────
-# INTRODUCTION MÉTHODOLOGIQUE
-# ─────────────────────────────────────────────
+# -----------------------------
+# Indicateurs rapides
+# -----------------------------
+col_a, col_b, col_c, col_d = st.columns(4)
+with col_a:
+    st.metric("Commune", selection["commune"], f"Département {selection['departement']}")
+with col_b:
+    st.metric("Score global", f"{selection['score_global']}/100")
+with col_c:
+    st.metric("Taux de pauvreté", f"{selection['taux_pauvrete']} %")
+with col_d:
+    st.metric("Rapport D9/D1", f"{selection['d9_d1']}")
 
-with st.expander("ℹ️ Comprendre la logique de construction de l'indicateur", expanded=False):
-    st.write(
-        """
-        L'indicateur est construit en trois étapes :
+# -----------------------------
+# Corps principal : carte + panneau commune
+# -----------------------------
+left, right = st.columns([1.65, 1], gap="large")
 
-        **1. Choix des dimensions**  
-        Une dimension correspond à un grand domaine de la réalité sociale ou économique : revenus et inégalités, santé, emploi, logement, etc.
+with left:
+    st.markdown('<div class="card"><h3>Carte des scores communaux</h3>', unsafe_allow_html=True)
 
-        **2. Choix des variables**  
-        Une variable est une donnée précise utilisée pour mesurer une dimension.  
-        Par exemple, dans la dimension revenus et inégalités, on peut retenir le revenu médian,
-        le taux de pauvreté au seuil de 60 % du revenu médian ou le rapport interdécile D9/D1.
-
-        **3. Pondération**  
-        Les élèves peuvent ensuite décider du poids de chaque variable et du poids de chaque dimension.
-        Cela permet de discuter démocratiquement de ce qui compte le plus dans l'indicateur.
-        """
+    fig_map = px.scatter_mapbox(
+        communes,
+        lat="lat",
+        lon="lon",
+        hover_name="commune",
+        hover_data={
+            "departement": True,
+            "score_global": True,
+            "revenu_median": ":,.0f",
+            "taux_pauvrete": True,
+            "lat": False,
+            "lon": False,
+        },
+        color="score_global",
+        size="score_global",
+        zoom=8,
+        height=560,
+        color_continuous_scale=["#b93838", "#c97822", "#2e7d61"],
+        size_max=34,
     )
+    fig_map.update_layout(
+        mapbox_style="carto-positron",
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        coloraxis_colorbar=dict(title="Score"),
+    )
+    st.plotly_chart(fig_map, use_container_width=True)
 
-with st.expander("📌 Voir toutes les dimensions et variables disponibles", expanded=False):
-    st.dataframe(tableau_variables(), use_container_width=True)
+    st.caption(
+        "Prototype : les points représentent les communes. Dans une version avancée, on pourra remplacer ces points par un vrai fond de carte communal GeoJSON."
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
-# 1. CHOIX DES DIMENSIONS
-# ─────────────────────────────────────────────
+with right:
+    st.markdown('<div class="card"><h3>Profil de la commune sélectionnée</h3>', unsafe_allow_html=True)
 
-with st.expander("1. Choisir les dimensions de l'indicateur", expanded=True):
-
-    dimensions_disponibles = list(DIMENSIONS.keys())
-
-    st.write("Cochez les dimensions que vous souhaitez intégrer dans l'indicateur final :")
-
-    dimensions_choisies = []
-
-    for nom_dimension in dimensions_disponibles:
+    score = selection["score_global"]
+    if score < 45:
         st.markdown(
-            f'<div class="dimension-title">{nom_dimension}</div>',
-            unsafe_allow_html=True
+            '<div class="alert-red">🔴 Situation fragile : le score invite à regarder les variables défavorables et les effets de cumul.</div>',
+            unsafe_allow_html=True,
+        )
+    elif score < 60:
+        st.markdown(
+            '<div class="alert-orange">🟠 Situation intermédiaire : le résultat dépend fortement des pondérations choisies.</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            '<div class="alert-green">🟢 Situation relativement favorable selon les choix de variables et de pondérations.</div>',
+            unsafe_allow_html=True,
         )
 
-        dimension_active = st.checkbox(
-            label="Inclure cette dimension",
-            value=True,
-            key=f"choix_dimension_{nom_dimension}"
+    st.write("")
+
+    radar_values = [selection[col] for col in DIMENSIONS.keys()]
+    radar_labels = list(DIMENSIONS.values())
+
+    fig_radar = go.Figure()
+    fig_radar.add_trace(
+        go.Scatterpolar(
+            r=radar_values + [radar_values[0]],
+            theta=radar_labels + [radar_labels[0]],
+            fill="toself",
+            name=selection["commune"],
         )
-
-        if dimension_active:
-            dimensions_choisies.append(nom_dimension)
-
-    if len(dimensions_choisies) == 0:
-        st.warning("Vous devez choisir au moins une dimension pour calculer l'indicateur.")
-        st.stop()
-
-    st.markdown("Dimensions retenues : **" + ", ".join(dimensions_choisies) + "**")
-
-# ─────────────────────────────────────────────
-# PONDÉRATION DES DIMENSIONS
-# ─────────────────────────────────────────────
-
-with st.sidebar:
-    st.header("⚖️ Poids des dimensions")
-    st.caption("Ces poids indiquent l'importance de chaque dimension dans le score final.")
-
-    poids_dimensions = {}
-
-    for nom_dimension in dimensions_choisies:
-        poids_dimensions[nom_dimension] = st.slider(
-            label=f"{nom_dimension}",
-            min_value=0.0,
-            max_value=5.0,
-            value=1.0,
-            step=0.5,
-            key=f"poids_dimension_{nom_dimension}"
-        )
-
-    st.divider()
-
-    st.header("📌 Bornes importantes")
-    st.write("**Revenu médian** : 14 790 € → 48 010 €")
-    st.write("**Taux de pauvreté au seuil de 60 %** : 5 % → 44 %")
-    st.write("**Rapport D9/D1** : 2,2 → 8,1")
-    st.write("**Diplômés du supérieur** : 9,4 % → 74,2 %")
-    st.write("**Actifs peu ou pas diplômés** : 1,0 % → 47,0 %")
-
-# ─────────────────────────────────────────────
-# 2. CHOIX DES VARIABLES ET VALEURS
-# ─────────────────────────────────────────────
-
-with st.expander("2. Choisir les variables dans chaque dimension", expanded=True):
-
-    st.write(
-        """
-        Pour chaque dimension retenue, choisissez les variables qui doivent entrer dans le calcul.
-        Une variable cochée est intégrée à l'indicateur. Une variable décochée est ignorée.
-        """
     )
+    fig_radar.update_layout(
+        polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+        showlegend=False,
+        height=360,
+        margin=dict(l=20, r=20, t=30, b=20),
+    )
+    st.plotly_chart(fig_radar, use_container_width=True)
 
-    variables_choisies = {}
-    valeurs = {}
-    poids_variables = {}
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    tabs = st.tabs(dimensions_choisies)
+# -----------------------------
+# Comparaison des dimensions
+# -----------------------------
+st.markdown('<div class="card"><h3>Comparer les dimensions de la commune</h3>', unsafe_allow_html=True)
 
-    for tab, nom_dimension in zip(tabs, dimensions_choisies):
-        with tab:
-            contenu_dimension = DIMENSIONS[nom_dimension]
+bar_df = pd.DataFrame(
+    {
+        "Dimension": list(DIMENSIONS.values()),
+        "Score normalisé": [selection[col] for col in DIMENSIONS.keys()],
+    }
+).sort_values("Score normalisé")
 
-            st.subheader(f"Dimension : {nom_dimension}")
-            st.write(contenu_dimension["description"])
-
-            st.markdown("### Variables disponibles dans cette dimension")
-
-            variables_choisies[nom_dimension] = []
-
-            for nom_variable, infos in contenu_dimension["variables"].items():
-                st.markdown("---")
-
-                col_check, col_variable = st.columns([0.08, 0.92])
-
-                with col_check:
-                    actif = st.checkbox(
-                        label=f"Sélectionner {nom_variable}",
-                        value=True,
-                        key=f"actif_{nom_dimension}_{nom_variable}",
-                        label_visibility="collapsed"
-                    )
-
-                with col_variable:
-                    st.markdown(
-                        f'<div class="variable-title">{nom_variable}</div>',
-                        unsafe_allow_html=True
-                    )
-
-                st.caption(
-                    f"Borne min : {infos['min']} {infos.get('unite', '')} | "
-                    f"Borne max : {infos['max']} {infos.get('unite', '')}"
-                )
-
-                if actif:
-                    variables_choisies[nom_dimension].append(nom_variable)
-
-                    col1, col2 = st.columns([2, 1])
-
-                    with col1:
-                        step = 0.1 if isinstance(infos["min"], float) or isinstance(infos["max"], float) else 1.0
-                        format_affichage = "%.1f" if step == 0.1 else "%.0f"
-                        unite_label = f"({infos.get('unite')})" if infos.get("unite") else ""
-
-                        valeurs[nom_variable] = st.number_input(
-                            label=f"Valeur observée {unite_label}",
-                            min_value=float(infos["min"]),
-                            max_value=float(infos["max"]),
-                            value=float(infos["valeur"]),
-                            step=float(step),
-                            format=format_affichage,
-                            key=f"valeur_{nom_dimension}_{nom_variable}"
-                        )
-
-                    with col2:
-                        poids_variables[nom_variable] = st.slider(
-                            label="Poids de la variable",
-                            min_value=0.0,
-                            max_value=5.0,
-                            value=1.0,
-                            step=0.5,
-                            key=f"poids_variable_{nom_dimension}_{nom_variable}"
-                        )
-
-                else:
-                    st.warning("Cette variable ne sera pas intégrée au calcul.")
-
-# ─────────────────────────────────────────────
-# VÉRIFICATION
-# ─────────────────────────────────────────────
-
-nombre_variables_retenues = sum(len(v) for v in variables_choisies.values())
-
-if nombre_variables_retenues == 0:
-    st.warning("Vous devez choisir au moins une variable pour calculer l'indicateur.")
-    st.stop()
-
-# ─────────────────────────────────────────────
-# CALCUL
-# ─────────────────────────────────────────────
-
-resultats_variables, scores_dimensions, indicateur_global = calculer_indicateur(
-    dimensions_choisies=dimensions_choisies,
-    variables_choisies=variables_choisies,
-    valeurs=valeurs,
-    poids_variables=poids_variables,
-    poids_dimensions=poids_dimensions
+fig_bar = px.bar(
+    bar_df,
+    x="Score normalisé",
+    y="Dimension",
+    orientation="h",
+    range_x=[0, 100],
+    text="Score normalisé",
+    height=360,
 )
+fig_bar.update_traces(textposition="outside")
+fig_bar.update_layout(
+    margin=dict(l=10, r=30, t=10, b=10),
+    xaxis_title="Score sur 100",
+    yaxis_title="",
+)
+st.plotly_chart(fig_bar, use_container_width=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
-df_resultats = pd.DataFrame(resultats_variables)
+# -----------------------------
+# Tableau comparatif
+# -----------------------------
+with st.expander("Voir le tableau comparatif des communes"):
+    colonnes_tableau = ["commune", "departement", "score_global"] + list(DIMENSIONS.keys()) + [
+        "revenu_median",
+        "taux_pauvrete",
+        "d9_d1",
+    ]
+    table = communes[colonnes_tableau].sort_values("score_global", ascending=False)
+    table = table.rename(columns={**DIMENSIONS, "commune": "Commune", "departement": "Département", "score_global": "Score global"})
+    st.dataframe(table, use_container_width=True, hide_index=True)
 
-# ─────────────────────────────────────────────
-# 3. RÉSULTATS
-# ─────────────────────────────────────────────
-
-with st.expander("3. Résultat de l'indicateur synthétique", expanded=True):
-
-    col_score, col_radar = st.columns([1, 2])
-
-    with col_score:
-        st.markdown('<div class="section-box">', unsafe_allow_html=True)
-        st.metric(
-            label="Score global",
-            value=f"{indicateur_global * 100:.1f} / 100"
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        st.subheader("Scores par dimension")
-
-        for dim, score in scores_dimensions.items():
-            st.write(f"**{dim}** : {score * 100:.1f} / 100")
-            st.progress(score)
-
-    with col_radar:
-        st.subheader("Radar des dimensions")
-        fig_radar = creer_radar(scores_dimensions)
-        st.plotly_chart(fig_radar, use_container_width=True)
-
-# ─────────────────────────────────────────────
-# 4. DÉTAIL DES VARIABLES
-# ─────────────────────────────────────────────
-
-with st.expander("4. Détail du calcul par variable", expanded=False):
-
-    st.write(
+# -----------------------------
+# Méthode et discussion collective
+# -----------------------------
+if afficher_methode:
+    st.markdown('<div class="card"><h3>Notes méthodologiques et discussion collective</h3>', unsafe_allow_html=True)
+    st.markdown(
         """
-        Le tableau ci-dessous montre uniquement les variables retenues dans le calcul.
-        Il permet de vérifier les bornes, les communes associées aux bornes, le poids et le score obtenu.
+        <div class="method-box">
+        <strong>Principe pédagogique :</strong> la carte ne doit pas être lue comme un classement naturel des communes.
+        Elle rend visibles les effets des choix collectifs : sélection des variables, sens favorable ou défavorable,
+        bornes de normalisation, pondérations et seuils d'alerte.
+        <br><br>
+        <strong>À discuter avec les élèves :</strong>
+        <ul>
+            <li>Le score global masque-t-il certaines fragilités locales ?</li>
+            <li>Une commune peut-elle être favorisée par le choix des pondérations ?</li>
+            <li>Faut-il afficher des alertes rouges lorsqu'une variable dépasse un seuil critique ?</li>
+            <li>Quels indicateurs manquent pour mieux représenter la santé sociale d'une commune ?</li>
+        </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# -----------------------------
+# Préparation à l'intégration dans ton app.py
+# -----------------------------
+with st.expander("Comment intégrer ce style dans ton app.py existant ?"):
+    st.markdown(
         """
-    )
-
-    st.dataframe(
-        df_resultats[
-            [
-                "Dimension",
-                "Variable",
-                "Valeur",
-                "Unité",
-                "Min",
-                "Commune borne min",
-                "Max",
-                "Commune borne max",
-                "Poids variable",
-                "Score normalisé 0-100",
-                "Source"
-            ]
-        ],
-        use_container_width=True
-    )
-
-    if "Revenus et inégalités" in scores_dimensions:
-        st.subheader("Zoom sur la dimension Revenus et inégalités")
-
-        df_revenus = df_resultats[df_resultats["Dimension"] == "Revenus et inégalités"][
-            [
-                "Variable",
-                "Valeur",
-                "Unité",
-                "Min",
-                "Commune borne min",
-                "Max",
-                "Commune borne max",
-                "Score normalisé 0-100",
-                "Source"
-            ]
-        ]
-
-        st.dataframe(df_revenus, use_container_width=True)
-
-        with st.expander("🧠 Pourquoi le rapport D9/D1 réduit-il le score ?", expanded=False):
-            st.write(
-                """
-                Le rapport interdécile D9/D1 mesure l'écart entre les 10 % les plus aisés et les 10 % les plus modestes.
-
-                Un rapport D9/D1 élevé signifie que les écarts de revenus sont importants.
-                Dans un indicateur de santé sociale ou socio-économique, cela correspond à une situation moins favorable.
-
-                C'est pourquoi, dans le calcul, plus le rapport D9/D1 augmente, plus le score de cette variable diminue.
-                """
-            )
-
-    if "Éducation" in scores_dimensions:
-        st.subheader("Zoom sur la dimension Éducation")
-
-        df_education = df_resultats[df_resultats["Dimension"] == "Éducation"][
-            [
-                "Variable",
-                "Valeur",
-                "Unité",
-                "Min",
-                "Commune borne min",
-                "Max",
-                "Commune borne max",
-                "Score normalisé 0-100",
-                "Source"
-            ]
-        ]
-
-        st.dataframe(df_education, use_container_width=True)
-
-        with st.expander("🧠 Pourquoi la part des actifs peu ou pas diplômés réduit-elle le score ?", expanded=False):
-            st.write(
-                """
-                La variable « Part des actifs peu ou pas diplômés parmi les actifs » mesure la part des actifs
-                sans diplôme, avec un CEP, ou avec le BEPC / brevet des collèges / DNB.
-
-                Une valeur élevée indique une plus forte proportion d'actifs faiblement diplômés.
-                Dans un indicateur socio-économique, cette situation est interprétée comme moins favorable.
-
-                C'est pourquoi, dans le calcul, plus cette part augmente, plus le score de cette variable diminue.
-                """
-            )
-
-# ─────────────────────────────────────────────
-# 5. EXPORT
-# ─────────────────────────────────────────────
-
-with st.expander("5. Export des résultats", expanded=False):
-
-    csv_resultats = df_resultats.to_csv(index=False).encode("utf-8-sig")
-
-    st.download_button(
-        label="📥 Télécharger les résultats en CSV",
-        data=csv_resultats,
-        file_name="resultats_indicateur_socio_economique.csv",
-        mime="text/csv"
-    )
-
-# ─────────────────────────────────────────────
-# NOTE FINALE
-# ─────────────────────────────────────────────
-
-with st.expander("🧩 Note pédagogique : dimension ou variable ?", expanded=False):
-    st.write(
-        """
-        Une **dimension** est un grand domaine retenu pour évaluer la situation sociale ou économique d'une commune.
-
-        Exemples :
-        - Revenus et inégalités
-        - Santé
-        - Emploi
-        - Logement
-        - Éducation
-
-        Une **variable** est une donnée statistique précise utilisée pour mesurer une dimension.
-
-        Exemple dans la dimension revenus et inégalités :
-        - Revenu médian
-        - Taux de pauvreté au seuil de 60 % du revenu médian
-        - Rapport interdécile D9/D1
-
-        Exemples dans la dimension éducation :
-        - Part des diplômés du supérieur parmi les personnes de 15 ans ou plus non scolarisées
-        - Part des actifs peu ou pas diplômés parmi les actifs
-
-        Le choix des dimensions et des variables n'est pas neutre.
-        Il reflète une certaine définition de ce que l'on considère comme une situation sociale favorable ou défavorable.
-        C'est pourquoi ce prototype permet de discuter ces choix collectivement.
+        1. Garde ton code de calcul actuel : normalisation, variables, dimensions et score global.
+        2. Ajoute les colonnes `lat` et `lon` à ta base communale pour afficher les communes sur la carte.
+        3. Remplace `communes_demo` par ton DataFrame final.
+        4. Conserve les blocs CSS et la structure `carte + panneau latéral + radar + tableau`.
+        5. Plus tard, remplace `scatter_mapbox` par une vraie carte communale avec un fichier GeoJSON des communes d'Île-de-France.
         """
     )
