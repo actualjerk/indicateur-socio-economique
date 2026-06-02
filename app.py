@@ -37,26 +37,6 @@ html, body, [class*="css"] {
 }
 
 /* ── Badges ── */
-.badge-pos {
-    display: inline-block;
-    background: #d1fae5;
-    color: #065f46;
-    border-radius: 999px;
-    padding: 2px 10px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-left: 6px;
-}
-.badge-neg {
-    display: inline-block;
-    background: #fee2e2;
-    color: #991b1b;
-    border-radius: 999px;
-    padding: 2px 10px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-left: 6px;
-}
 .badge-todo {
     display: inline-block;
     background: #fef9c3;
@@ -66,6 +46,52 @@ html, body, [class*="css"] {
     font-size: 0.75rem;
     font-weight: 600;
     margin-left: 6px;
+}
+
+/* ── Bornes visuelles ── */
+.bornes-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+}
+.borne-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 7px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+.borne-min-block {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+}
+.borne-max-block {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+}
+.borne-label {
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+}
+.borne-val {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #1e3a5f;
+}
+.borne-commune {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-style: italic;
+}
+.borne-arrow {
+    color: #94a3b8;
+    font-size: 0.85rem;
 }
 
 /* ── Carte variable ── */
@@ -432,7 +458,7 @@ def calculer_indicateur(dimensions_choisies, variables_choisies, valeurs, poids_
             resultats_variables.append({
                 "Dimension": nom_dimension,
                 "Variable": nom_variable,
-                "Valeur": valeur,
+                "Valeur saisie": valeur,
                 "Unité": infos.get("unite", ""),
                 "Min": infos["min"],
                 "Commune borne min": infos.get("commune_min", ""),
@@ -512,17 +538,6 @@ def tableau_variables():
             })
     return pd.DataFrame(lignes)
 
-
-def badge_sens(sens):
-    if sens == "positif":
-        return '<span class="badge-pos">↑ positif</span>'
-    else:
-        return '<span class="badge-neg">↓ négatif</span>'
-
-
-def badge_source(source):
-    label = "📎 INSEE" if "INSEE" in source else ("📎 Filosofi" if "Filosofi" in source else "⏳ à documenter")
-    return f'<span class="source-tag">{label}</span>'
 
 
 # ─────────────────────────────────────────────
@@ -650,14 +665,24 @@ for tab, nom_dimension in zip(tabs, dimensions_choisies):
                 )
 
             with col_info:
-                sens_badge = badge_sens(infos.get("sens", "positif"))
-                src_badge = badge_source(infos.get("source", ""))
+                commune_min = infos.get("commune_min", "")
+                commune_max = infos.get("commune_max", "")
+                commune_min_str = f'<span class="borne-commune">{commune_min}</span>' if commune_min and commune_min != "À documenter" else ""
+                commune_max_str = f'<span class="borne-commune">{commune_max}</span>' if commune_max and commune_max != "À documenter" else ""
                 st.markdown(
-                    f'<div class="var-name">{nom_variable}{sens_badge}{src_badge}</div>'
-                    f'<div class="var-meta">'
-                    f'Borne min : <b>{infos["min"]}{unite_label}</b> — {infos.get("commune_min","")}'
-                    f'&nbsp;&nbsp;|&nbsp;&nbsp;'
-                    f'Borne max : <b>{infos["max"]}{unite_label}</b> — {infos.get("commune_max","")}'
+                    f'<div class="var-name">{nom_variable}</div>'
+                    f'<div class="bornes-wrap">'
+                    f'  <span class="borne-block borne-min-block">'
+                    f'    <span class="borne-label">Min</span>'
+                    f'    <span class="borne-val">{infos["min"]}{unite_label}</span>'
+                    f'    {commune_min_str}'
+                    f'  </span>'
+                    f'  <span class="borne-arrow">→</span>'
+                    f'  <span class="borne-block borne-max-block">'
+                    f'    <span class="borne-label">Max</span>'
+                    f'    <span class="borne-val">{infos["max"]}{unite_label}</span>'
+                    f'    {commune_max_str}'
+                    f'  </span>'
                     f'</div>',
                     unsafe_allow_html=True
                 )
@@ -765,34 +790,21 @@ with col_radar:
 
 with st.expander("🔍 Détail du calcul par variable", expanded=False):
     st.caption("Ce tableau montre les variables retenues, leurs bornes, communes de référence, poids et score calculé.")
+
+    df_affichage = df_resultats[[
+        "Dimension", "Variable", "Valeur saisie", "Unité",
+        "Min", "Commune borne min",
+        "Max", "Commune borne max",
+        "Poids variable", "Score normalisé 0-100", "Source"
+    ]]
+
     st.dataframe(
-        df_resultats[[
-            "Dimension", "Variable", "Valeur", "Unité",
-            "Min", "Commune borne min",
-            "Max", "Commune borne max",
-            "Poids variable", "Score normalisé 0-100", "Source"
-        ]],
+        df_affichage.style.highlight_between(
+            subset=["Valeur saisie"],
+            color="#fef9c3"
+        ),
         use_container_width=True
     )
-
-    # Explications automatiques pour les variables "négatives"
-    vars_negatives = df_resultats[df_resultats["Variable"].isin([
-        v for dim in DIMENSIONS.values()
-        for vnom, vinfo in dim["variables"].items()
-        if vinfo.get("sens") == "negatif"
-        for v in [vnom]
-    ])]
-
-    if not vars_negatives.empty:
-        st.markdown("**🧠 Pourquoi certaines variables réduisent-elles le score ?**")
-        st.markdown(
-            '<div class="info-box">'
-            'Les variables marquées <span class="badge-neg">↓ négatif</span> sont inversées lors du calcul : '
-            'une valeur élevée (ex. taux de chômage élevé, rapport D9/D1 élevé) correspond à une situation moins favorable, '
-            'et donne donc un score plus bas.'
-            '</div>',
-            unsafe_allow_html=True
-        )
 
 # ─────────────────────────────────────────────
 # EXPORT
