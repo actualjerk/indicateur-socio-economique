@@ -203,7 +203,7 @@ DIMENSIONS: Dict[str, Dict] = {
     "Emploi": {
         "description": "Dimension centrée sur l'accès à l'emploi et la fragilité sur le marché du travail.",
         "variables": {
-            "Taux de chômage au sens du recensement des 15-64 ans": {
+            "Taux de chômage des 15-64 ans": {
                 "description": (
                     "Le taux de chômage rapporte le nombre de chômeurs à la population active "
                     "des 15-64 ans. Plus il est élevé, plus la situation de l'emploi est défavorable."
@@ -213,8 +213,8 @@ DIMENSIONS: Dict[str, Dict] = {
                 "max": 15.2901,
                 "valeur_defaut": 10.7472,
                 "sens": "negatif",
-                "source": "INSEE, Recensement de la population 2021, base communale Emploi-Population active, France hors Mayotte, géographie au 01/01/2024",
-                "calcul_variable": "x = P21_CHOM1564 / P21_ACT1564 × 100 (taux de chômage au sens du recensement)",
+                "source": "Insee, Recensement de la population 2021, base Emploi - Population active",
+                "calcul_variable": "x = P21_CHOM1564 / P21_ACT1564 × 100",
                 "minimum_reel": 0,
                 "maximum_reel": 22.9971,
                 "commune_min_reel": "2 communes, dont Montenils (77304)",
@@ -237,7 +237,7 @@ DIMENSIONS: Dict[str, Dict] = {
                 "max": 22.7569,
                 "valeur_defaut": 8.8045,
                 "sens": "negatif",
-                "source": "INSEE, Recensement de la population 2021, base communale Emploi-Population active, France hors Mayotte, géographie au 01/01/2024",
+                "source": "Insee, Recensement de la population 2021, base Emploi - Population active",
                 "calcul_variable": "x = (P21_ACT_DIPLMIN + P21_ACT_BEPC) / P21_ACT1564 × 100",
                 "minimum_reel": 0.9679,
                 "maximum_reel": 46.9962,
